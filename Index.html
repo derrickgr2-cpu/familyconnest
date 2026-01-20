@@ -1,0 +1,827 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  TreePine, 
+  Users, 
+  Calendar, 
+  MessageSquare, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  ShieldCheck, 
+  ChevronRight,
+  UserPlus,
+  Mail,
+  Phone,
+  Image as ImageIcon,
+  Megaphone,
+  ArrowLeft,
+  Clock,
+  Settings,
+  Beaker,
+  BookOpen,
+  FileText,
+  BadgeInfo,
+  History,
+  Search,
+  X,
+  UserSearch,
+  Upload,
+  Camera,
+  Layers,
+  Menu,
+  Lock,
+  Unlock,
+  KeyRound,
+  AlertCircle,
+  CalendarDays
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query,
+  arrayUnion
+} from 'firebase/firestore';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+
+// --- Firebase Initialization ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' && __app_id ? __app_id : 'barbour-connections-v3';
+
+// --- Global Constants ---
+const ADMIN_NAME = "Samantha Smith";
+const FAMILY_NAME = "The Barbour Connections";
+const EVENT_PASSWORD = "3333";
+
+const RELATIONS_LIST = [
+  "Son of", "Daughter of", "Niece of", "Nephew of",
+  "Boyfriend of", "Girlfriend of", "Wife of", "Husband of",
+  "Mother / Matriarch", "Father / Patriarch", "Partner", "Root"
+];
+
+// --- Sub-Components (Function Declarations for Hoisting) ---
+
+function FamilyTicker({ members }) {
+  const tickerContent = useMemo(() => {
+    if (!members || members.length === 0) return "Gathering the Barbour lineage...";
+    const memberStrings = (members || []).map(m => `${String(m.name || 'Unnamed')} (${String(m.relation || 'Member')})`);
+    const joint = memberStrings.join('  •  ');
+    return `${joint}  •  ${joint}`;
+  }, [members]);
+
+  return (
+    <div className="fixed bottom-0 left-0 lg:left-72 right-0 bg-stone-950 border-t border-amber-900/50 py-2 overflow-hidden z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+      <style>
+        {`
+          @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .animate-ticker {
+            animation: ticker 60s linear infinite;
+          }
+          .animate-ticker:hover {
+            animation-play-state: paused;
+          }
+        `}
+      </style>
+      <div className="flex whitespace-nowrap animate-ticker">
+        <span className="text-amber-100/80 font-serif text-sm tracking-widest px-4 uppercase italic">
+          {tickerContent}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function HeaderMobile({ isOpen, setIsOpen }) {
+  return (
+    <div className="lg:hidden fixed top-0 left-0 w-full bg-stone-900 text-stone-100 p-4 z-[150] flex justify-between items-center border-b border-amber-900/50 shadow-xl">
+      <div className="flex items-center gap-2">
+        <div className="bg-amber-900 p-1.5 rounded-lg shadow-inner">
+          <TreePine className="w-5 h-5 text-amber-200" />
+        </div>
+        <span className="font-serif font-bold text-amber-100">{FAMILY_NAME}</span>
+      </div>
+      <button onClick={() => setIsOpen(!isOpen)} className="p-2 bg-stone-800 rounded-lg">
+        {isOpen ? <X className="w-6 h-6 text-amber-500" /> : <Menu className="w-6 h-6 text-amber-500" />}
+      </button>
+    </div>
+  );
+}
+
+function Sidebar({ activeTab, setActiveTab, setSelectedMember, setEditingMember, setIsModalOpen, setIsSearchOpen, isMobileOpen, setIsMobileOpen }) {
+  const navItems = [
+    { id: 'tree', icon: TreePine, label: 'Family Grove' },
+    { id: 'members', icon: Users, label: 'The Archives' },
+    { id: 'events', icon: CalendarDays, label: 'Union Events' },
+    { id: 'comms', icon: MessageSquare, label: 'Town Square' }
+  ];
+
+  return (
+    <aside className={`fixed top-0 left-0 h-full w-72 bg-stone-900 text-stone-100 z-[170] border-r-4 border-amber-900 shadow-[8px_0_40px_rgba(0,0,0,0.5)] flex flex-col transition-transform duration-300 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-8 border-b border-stone-800 relative overflow-hidden shrink-0">
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+        <div className="flex items-center gap-4 relative z-10 text-left">
+          <div className="bg-amber-900 p-3 rounded-2xl border-2 border-amber-700 shadow-xl">
+            <TreePine className="w-8 h-8 text-amber-100" />
+          </div>
+          <div>
+            <h1 className="text-xl font-serif font-black tracking-tight text-amber-100 uppercase leading-none mb-1">{FAMILY_NAME}</h1>
+            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest mt-1">Digital Ancestry</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-6 space-y-2 overflow-y-auto text-left">
+        <p className="text-[10px] font-black text-stone-600 uppercase tracking-[0.2em] mb-4 px-4">Navigation</p>
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => { setActiveTab(item.id); setSelectedMember(null); setIsMobileOpen(false); }}
+            className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group relative ${
+              activeTab === item.id && !setSelectedMember
+              ? 'bg-amber-900/10 text-amber-400 border border-amber-900/50 shadow-inner' 
+              : 'text-stone-500 hover:text-stone-200 hover:bg-stone-800'
+            }`}
+          >
+            {activeTab === item.id && (
+              <div className="absolute left-0 w-1 h-6 bg-amber-500 rounded-full" />
+            )}
+            <item.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${activeTab === item.id ? 'text-amber-500' : ''}`} />
+            <span className="font-bold text-sm tracking-wide uppercase">{item.label}</span>
+          </button>
+        ))}
+
+        <div className="pt-8 space-y-2">
+          <p className="text-[10px] font-black text-stone-600 uppercase tracking-[0.2em] mb-4 px-4">Registry Tools</p>
+          <button 
+            onClick={() => { setIsSearchOpen(true); setIsMobileOpen(false); }}
+            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-stone-500 hover:text-amber-400 hover:bg-stone-800 transition-all border border-transparent hover:border-amber-900/30 text-left"
+          >
+            <Search className="w-5 h-5" />
+            <span className="font-bold text-sm tracking-wide uppercase">Member Lookup</span>
+          </button>
+          <button 
+            onClick={() => { setEditingMember(null); setIsModalOpen(true); setIsMobileOpen(false); }}
+            className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-stone-100 bg-amber-900/80 hover:bg-amber-800 transition-all shadow-xl font-bold border border-amber-700/50 text-left"
+          >
+            <UserPlus className="w-5 h-5" />
+            <span className="font-bold text-sm tracking-wide uppercase">Add Kinfolk</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="p-6 border-t border-stone-800 bg-stone-950/50 text-left">
+        <div className="flex items-center gap-3 p-3 bg-stone-900 rounded-xl border border-stone-800 shadow-inner">
+          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5 text-stone-900" />
+          </div>
+          <div className="overflow-hidden text-left">
+            <p className="text-[10px] font-black text-stone-500 uppercase tracking-tighter">Manager</p>
+            <p className="text-xs font-bold text-stone-300 truncate">{ADMIN_NAME}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function SearchSidebar({ isOpen, setIsOpen, searchQuery, setSearchQuery, members, setSelectedMember }) {
+  const filteredSearch = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return (members || []).filter(m => 
+      String(m.name || '').toLowerCase().includes(q) || 
+      String(m.relation || '').toLowerCase().includes(q) || 
+      String(m.testField || '').toLowerCase().includes(q)
+    );
+  }, [members, searchQuery]);
+
+  return (
+    <>
+      <div 
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setIsOpen(false)}
+      />
+      <div className={`fixed top-0 right-0 h-full w-full max-w-sm bg-stone-900 border-l-4 border-amber-900 shadow-2xl z-[210] transition-transform duration-500 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-8 h-full flex flex-col text-left">
+          <div className="flex justify-between items-center mb-8 shrink-0">
+            <h3 className="text-2xl font-serif font-bold text-amber-100 flex items-center gap-2">
+              <UserSearch className="w-6 h-6 text-amber-500" /> Search Registry
+            </h3>
+            <button onClick={() => setIsOpen(false)} className="text-stone-400 hover:text-white transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="relative mb-6 shrink-0">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+            <input 
+              autoFocus
+              className="w-full bg-stone-800 border-2 border-stone-700 rounded-2xl py-4 pl-12 pr-4 text-stone-100 placeholder:text-stone-500 focus:border-amber-900 focus:outline-none transition-all font-medium text-left"
+              placeholder="Enter name or level..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 text-left">
+            {searchQuery.trim() === "" ? (
+              <div className="text-center py-20 text-stone-500">
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                <p className="italic text-sm">Start typing to browse lineage records...</p>
+              </div>
+            ) : filteredSearch.length === 0 ? (
+              <div className="text-center py-20 text-stone-500">
+                <BadgeInfo className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                <p className="italic text-sm text-center">No results found.</p>
+              </div>
+            ) : (
+              filteredSearch.map(m => (
+                <div 
+                  key={m.id} 
+                  onClick={() => {
+                    setSelectedMember(m);
+                    setIsOpen(false);
+                    setSearchQuery("");
+                  }}
+                  className="bg-stone-800 p-4 rounded-xl border border-stone-700 hover:border-amber-700 transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-12 h-12 rounded-lg bg-stone-700 overflow-hidden flex-shrink-0 border border-stone-600">
+                      {m.photoUrl ? (
+                        <img src={m.photoUrl} className="w-full h-full object-cover" alt={String(m.name)} />
+                      ) : (
+                        <Users className="w-full h-full p-3 text-stone-500" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-stone-100 font-bold group-hover:text-amber-400 transition-colors text-left">{String(m.name || 'Unnamed')}</h4>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-stone-500 text-left">{String(m.relation || 'Member')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function FamilyTree({ members, setSelectedMember, setEditingMember, setIsModalOpen }) {
+  const roots = (members || []).filter(m => 
+    ['Mother / Matriarch', 'Father / Patriarch', 'Wife of', 'Husband of', 'Partner', 'Root'].includes(m.relation)
+  );
+  const branches = (members || []).filter(m => !roots.some(r => r.id === m.id));
+
+  return (
+    <div className="p-8 min-h-screen bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] bg-stone-200 relative text-center pb-40 pt-24 lg:pt-8 overflow-y-auto">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-12 flex flex-col items-center">
+          <h2 className="text-4xl md:text-5xl font-serif text-stone-800 mb-2 leading-tight">The Family Grove</h2>
+          <p className="text-stone-500 font-serif italic tracking-wide mb-8">Rooted in history, growing with love</p>
+        </div>
+        
+        <div className="flex flex-col items-center gap-20">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 relative text-left">
+            {roots.map(m => (
+              <div key={m.id} className="bg-white p-5 rounded-3xl border-4 border-stone-800 shadow-2xl w-48 md:w-60 transition-all group relative overflow-hidden text-left">
+                <div 
+                  className="bg-stone-100 h-32 md:h-44 mb-4 rounded-2xl border flex items-center justify-center overflow-hidden cursor-pointer" 
+                  onClick={() => setSelectedMember(m)}
+                >
+                  {m.photoUrl ? <img src={m.photoUrl} className="w-full h-full object-cover" alt={String(m.name)} /> : <Users className="w-12 md:w-16 h-12 md:h-16 text-stone-300" />}
+                </div>
+                <p className="font-bold text-stone-900 font-serif text-base md:text-lg leading-tight mb-1">{String(m.name || 'Unnamed')}</p>
+                <p className="text-[10px] text-stone-400 uppercase font-black tracking-[0.1em] mb-4">{String(m.relation || 'Member')}</p>
+                <div className="flex items-center justify-between gap-2 mt-auto pt-4 border-t border-stone-50">
+                  <button onClick={() => { setEditingMember(m); setIsModalOpen(true); }} className="p-2 bg-stone-50 text-stone-400 hover:text-amber-900 rounded-xl transition-all border border-transparent hover:border-amber-100"><Edit2 className="w-4 h-4" /></button>
+                  <button onClick={() => setSelectedMember(m)} className="px-4 py-2 bg-amber-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-800 transition-all shadow-md">History</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="w-full h-1 bg-stone-400 max-w-4xl relative">
+            <div className="absolute left-1/2 -top-20 w-1 h-20 bg-stone-400"></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 pb-20 text-left">
+            {branches.map(m => (
+              <div key={m.id} className="relative flex flex-col items-center group">
+                <div className="w-1 h-12 bg-stone-400 mb-0"></div>
+                <div className="bg-white p-5 rounded-3xl border-2 border-stone-300 shadow-xl w-44 md:w-52 transition-all hover:shadow-2xl hover:border-amber-900 text-left text-left">
+                  <div 
+                    className="w-16 h-16 rounded-full bg-stone-50 mb-3 mx-auto overflow-hidden border-2 border-stone-100 cursor-pointer" 
+                    onClick={() => setSelectedMember(m)}
+                  >
+                    {m.photoUrl ? <img src={m.photoUrl} className="w-full h-full object-cover" alt={String(m.name)} /> : <Users className="w-full h-full p-4 text-stone-200" />}
+                  </div>
+                  <p className="font-bold text-stone-800 font-serif leading-tight text-center truncate">{String(m.name || 'Unnamed')}</p>
+                  <p className="text-[8px] md:text-[9px] text-stone-400 uppercase font-black tracking-wider mt-1 mb-4 text-center">{String(m.relation || 'Member')}</p>
+                  <div className="flex gap-2 justify-center pt-3 border-t border-stone-50">
+                    <button onClick={() => { setEditingMember(m); setIsModalOpen(true); }} className="p-1.5 text-stone-300 hover:text-amber-900 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => setSelectedMember(m)} className="text-[9px] font-black uppercase text-amber-900/40 hover:text-amber-900">View</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberDirectory({ members, setSelectedMember, setEditingMember, setIsModalOpen, handleDeleteMember }) {
+  return (
+    <div className="p-8 max-w-7xl mx-auto text-left pt-24 lg:pt-8 pb-40">
+      <div className="mb-12">
+        <h2 className="text-4xl font-serif font-bold text-stone-800 mb-2 leading-tight">The Archives</h2>
+        <p className="text-stone-500 tracking-wide font-medium italic">Public family records directory.</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {(members || []).map(member => (
+          <div key={member.id} className="bg-white rounded-[2.5rem] shadow-sm border border-stone-200 hover:border-amber-300 transition-all hover:shadow-xl group flex flex-col overflow-hidden text-left">
+            <div className="bg-stone-50 p-8 flex gap-6 items-center border-b border-stone-100 cursor-pointer text-left" onClick={() => setSelectedMember(member)}>
+              <div className="w-24 h-24 rounded-[1.5rem] bg-white overflow-hidden flex-shrink-0 border-4 border-white shadow-sm group-hover:scale-110 transition-transform">
+                {member.photoUrl ? <img src={member.photoUrl} className="w-full h-full object-cover" alt={String(member.name)} /> : <Users className="w-full h-full p-6 text-stone-300" />}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-stone-900 text-xl leading-tight mb-2">{String(member.name || 'Unnamed')}</h3>
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full flex items-center gap-2 border border-amber-100/50"><History className="w-2.5 h-2.5" /> {String(member.relation || 'Member')}</span>
+              </div>
+            </div>
+            <div className="p-8 space-y-8 flex-1 text-left" onClick={() => setSelectedMember(member)}>
+              <section>
+                <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2"><BookOpen className="w-3 h-3 text-stone-300" /> Story</h4>
+                <p className="text-sm text-stone-600 leading-relaxed italic line-clamp-3">"{String(member.bio || 'Record transcription pending.')}"</p>
+              </section>
+              {member.testField && (
+                <section className="bg-amber-50/50 p-5 rounded-2xl border border-amber-100 shadow-inner text-left">
+                  <h4 className="text-[10px] font-black text-amber-800/60 uppercase tracking-widest mb-2 flex items-center gap-2 text-left"><FileText className="w-3 h-3" /> Note</h4>
+                  <p className="text-xs text-amber-900 font-bold leading-relaxed">{String(member.testField)}</p>
+                </section>
+              )}
+            </div>
+            <div className="px-8 py-6 bg-stone-50 border-t border-stone-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex gap-4">
+                <div className={`p-2.5 rounded-xl ${member.phone ? 'text-green-600 bg-white shadow-sm border border-stone-100' : 'text-stone-200'}`}><Phone className="w-5 h-5" /></div>
+                <div className={`p-2.5 rounded-xl ${member.email ? 'text-blue-600 bg-white shadow-sm border border-stone-100' : 'text-stone-200'}`}><Mail className="w-5 h-5" /></div>
+                {member.album?.length > 0 && <div className="p-2.5 rounded-xl text-amber-600 bg-white shadow-sm flex items-center gap-1.5 px-3"><ImageIcon className="w-4 h-4" /><span className="text-[10px] font-black">{member.album.length}</span></div>}
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto text-left">
+                <button onClick={(e) => { e.stopPropagation(); setEditingMember(member); setIsModalOpen(true); }} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white text-blue-600 font-bold text-xs uppercase border rounded-xl hover:bg-blue-50 transition-all text-left"><Edit2 className="w-3.5 h-3.5" /> Edit</button>
+                <button onClick={(e) => { e.stopPropagation(); handleDeleteMember(member); }} className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-5 h-5" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MemberDetail({ member, setSelectedMember, setEditingMember, setIsModalOpen, handleAddUpdate, handleAddToAlbum }) {
+  const [updateText, setUpdateText] = useState("");
+  const [updateImg, setUpdateImg] = useState("");
+  const [albumPhoto, setAlbumPhoto] = useState(null);
+  const [albumDesc, setAlbumDesc] = useState("");
+
+  const handleAlbumUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || file.size > 800000) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setAlbumPhoto(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  if (!member) return null;
+
+  return (
+    <div className="p-4 md:p-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 text-left pb-40">
+      <div className="flex justify-between items-center mb-6 pt-24 lg:pt-0 text-left">
+        <button onClick={() => setSelectedMember(null)} className="flex items-center gap-2 text-stone-500 hover:text-amber-900 font-bold transition-all text-left"><ArrowLeft className="w-4 h-4" /> Back to Directory</button>
+        <button onClick={() => { setEditingMember(member); setIsModalOpen(true); }} className="bg-amber-900 text-white px-5 py-2.5 rounded-xl hover:bg-amber-800 font-bold text-sm shadow-lg active:scale-95 flex items-center gap-2 text-left"><Edit2 className="w-4 h-4" /> Edit Profile</button>
+      </div>
+
+      <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-stone-200 mb-12 text-left">
+        <div className="bg-stone-100 h-80 relative overflow-hidden flex items-center justify-center text-left">
+           {member.photoUrl ? <img src={member.photoUrl} alt={String(member.name)} className="w-full h-full object-cover opacity-80" /> : <div className="bg-stone-200 w-full h-full flex items-center justify-center"><Users className="w-32 h-32 text-stone-400" /></div>}
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+           <div className="absolute bottom-10 left-10 text-white text-left">
+             <h2 className="text-4xl md:text-6xl font-serif font-bold mb-4">{String(member.name || 'Unnamed')}</h2>
+             <div className="flex flex-wrap items-center gap-3">
+               <div className="px-4 py-1.5 bg-amber-600 rounded-full text-sm font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg text-left"><History className="w-4 h-4" /> {String(member.relation || 'Member')}</div>
+               {member.testField && <div className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-sm font-bold uppercase border border-white/30 flex items-center gap-2 shadow-lg text-left">{String(member.testField)}</div>}
+             </div>
+           </div>
+        </div>
+
+        <div className="p-10 grid grid-cols-1 md:grid-cols-3 gap-16 text-left">
+          <div className="md:col-span-1 space-y-12">
+            <section className="text-left"><h4 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-6 flex items-center gap-2 text-left"><Settings className="w-4 h-4 text-amber-800" /> Registry Info</h4><div className="space-y-6 text-left"><div className="flex items-center gap-4 text-stone-700 bg-stone-50 p-4 rounded-2xl border border-stone-100 shadow-sm text-left"><Phone className="w-5 h-5 text-amber-800" /><span>{String(member.phone || 'Private')}</span></div><div className="flex items-center gap-4 text-stone-700 bg-stone-50 p-4 rounded-2xl border border-stone-100 shadow-sm text-left"><Mail className="w-5 h-5 text-amber-800" /><span className="truncate">{String(member.email || 'None')}</span></div></div></section>
+            <section className="bg-stone-50 p-8 rounded-[2rem] border border-stone-200 shadow-inner text-left"><h4 className="text-xs font-black text-stone-500 uppercase tracking-widest mb-6 border-b border-stone-200 pb-3 text-left">Standing</h4><div className="space-y-6 text-left"><div><span className="block text-[10px] font-black text-stone-400 uppercase mb-2">Lineage Branch</span><p className="text-lg font-serif font-bold text-amber-900">{String(member.relation || 'Member')}</p></div>{member.testField && <div><span className="block text-[10px] font-black text-stone-400 uppercase mb-2 text-left">Registry Note</span><p className="text-sm text-stone-800 font-medium bg-amber-100/30 p-4 rounded-xl border border-amber-200/50 italic text-left">"{String(member.testField)}"</p></div>}</div></section>
+            <section className="text-left"><h4 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-6 flex items-center gap-2 text-left text-left"><BookOpen className="w-4 h-4 text-amber-800 text-left" /> The Story</h4><div className="bg-amber-50/30 p-8 rounded-[2rem] border border-amber-100 italic text-stone-600 leading-relaxed text-lg text-left">"{String(member.bio || 'Transcript pending.')}"</div></section>
+          </div>
+          <div className="md:col-span-2 space-y-16 text-left">
+            <div className="text-left text-left"><h4 className="text-2xl font-serif font-bold text-stone-800 mb-8 border-b-2 border-stone-100 pb-4 flex items-center justify-between text-left">Feed<span className="text-xs font-sans text-stone-400 font-normal uppercase tracking-widest text-left">{member.updates?.length || 0} Milestones</span></h4><div className="bg-stone-50 p-8 rounded-[2rem] mb-10 border-2 border-dashed border-stone-200 shadow-inner text-left"><p className="text-sm font-black text-stone-700 uppercase mb-4 tracking-widest flex items-center gap-2 text-left"><Plus className="w-4 h-4 text-amber-800" /> Record Milestone</p><textarea className="w-full p-5 bg-white border-2 border-stone-200 rounded-2xl text-sm mb-4 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-900 focus:outline-none font-medium text-left" placeholder="Describe a milestone..." rows="3" value={updateText} onChange={e => setUpdateText(e.target.value)} /><div className="flex flex-col sm:flex-row gap-4 text-left"><div className="flex-1 flex items-center gap-3 bg-white px-5 border-2 border-stone-200 rounded-2xl shadow-sm text-left"><ImageIcon className="w-4 h-4 text-stone-400" /><input className="text-xs flex-1 py-4 outline-none font-bold text-left" placeholder="Image URL (optional)" value={updateImg} onChange={e => setUpdateImg(e.target.value)} /></div><button onClick={() => { handleAddUpdate(member.id, updateText, updateImg); setUpdateText(""); setUpdateImg(""); }} className="bg-stone-900 text-white px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl text-left">Log Entry</button></div></div><div className="space-y-10 text-left">{member.updates?.length > 0 ? (member.updates.slice().reverse().map((upd, i) => (<div key={i} className="bg-white border-2 border-stone-50 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group text-left">{upd.image && <div className="h-72 overflow-hidden text-left"><img src={upd.image} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700 text-left" alt="Update" /></div>}<div className="p-8 text-left text-left"><p className="text-stone-700 text-lg leading-relaxed mb-6 font-serif italic text-left">"{String(upd.text)}"</p><div className="flex items-center gap-3 text-[10px] text-stone-400 font-black uppercase tracking-widest border-t border-stone-50 pt-4 text-left"><Clock className="w-3 h-3 text-left" /> Recorded on {new Date(upd.timestamp).toLocaleDateString()}</div></div></div>))) : <div className="text-center py-20 bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-100 text-center"><p className="text-stone-400 font-serif italic text-lg text-center text-left">No milestones recorded.</p></div>}</div></div>
+            <div className="pt-10 border-t-2 border-stone-100 text-left"><h4 className="text-3xl font-serif font-bold text-stone-800 mb-8 flex items-center gap-3 text-left">Gallery</h4><div className="bg-amber-50/30 p-8 rounded-[2.5rem] mb-12 border border-amber-100 shadow-sm text-left"><div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left"><div className="space-y-4 text-left"><label className="block text-[10px] font-black text-stone-500 uppercase tracking-widest px-2 text-left">Select Attachment</label><div className="flex items-center gap-4 text-left"><div className="w-20 h-20 rounded-2xl bg-white border-2 border-amber-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm text-left">{albumPhoto ? <img src={albumPhoto} className="w-full h-full object-cover text-left" alt="Album" /> : <Camera className="w-6 h-6 text-amber-200 text-left" />}</div><label className="flex-1 cursor-pointer text-left"><div className="bg-white border-2 border-amber-200 border-dashed rounded-2xl p-4 text-center hover:bg-amber-100/50 transition-colors text-left"><Upload className="w-5 h-5 text-amber-600 mx-auto mb-1 text-left" /><span className="text-[10px] font-black text-amber-800 block uppercase text-left">Pick Photo</span></div><input type="file" className="hidden" accept="image/*" onChange={handleAlbumUpload} /></label></div></div><div className="space-y-4 text-left text-left text-left"><label className="block text-[10px] font-black text-stone-500 uppercase tracking-widest px-2 text-left">Description</label><textarea className="w-full p-4 rounded-2xl border-2 border-amber-100 bg-white text-sm focus:ring-4 focus:ring-amber-500/10 focus:outline-none h-20 font-bold" placeholder="Describe this photo..." value={albumDesc} onChange={e => setAlbumDesc(e.target.value)} /></div></div><button disabled={!albumPhoto} onClick={() => { handleAddToAlbum(member.id, albumPhoto, albumDesc); setAlbumPhoto(null); setAlbumDesc(""); }} className={`mt-6 w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl transition-all ${albumPhoto ? 'bg-amber-900 text-white hover:bg-amber-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>Add to Album</button></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-left">{member.album?.length > 0 ? (member.album.slice().reverse().map((item, idx) => (<div key={idx} className="bg-stone-50 rounded-[2rem] overflow-hidden border border-stone-200 shadow-sm group text-left text-left"><div className="aspect-square overflow-hidden bg-stone-200 border-b border-stone-200 relative text-left text-left"><img src={item.photo} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 text-left" alt="Memory" /><div className="absolute top-4 right-4 bg-stone-900/40 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity text-left"> {new Date(item.timestamp).toLocaleDateString()}</div></div><div className="p-6 text-left text-left text-left"><p className="text-stone-600 text-sm font-bold leading-relaxed italic line-clamp-3 text-left">"{String(item.description || 'Archive memory.')}"</p></div></div>))) : <div className="col-span-full py-20 text-center border-2 border-dashed border-stone-100 rounded-[3rem] text-stone-400 font-serif italic text-center">Album is empty.</div>}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventsPage({ events, handleUpsertEvent, handleDeleteEvent }) {
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [passInput, setPassInput] = useState("");
+  const [showError, setShowError] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [desc, setDesc] = useState("");
+  const [photo, setPhoto] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || file.size > 800000) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPhoto(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUnlock = () => {
+    if (passInput === EVENT_PASSWORD) {
+      setIsAuthorized(true);
+      setShowError(false);
+    } else {
+      setShowError(true);
+      setTimeout(() => setShowError(false), 2000);
+    }
+  };
+
+  const sorted = [...(events || [])].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  return (
+    <div className="p-8 max-w-6xl mx-auto text-left pt-24 lg:pt-12 pb-40 text-left">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 text-left">
+        <div>
+          <h2 className="text-4xl font-serif font-bold text-stone-800 mb-2 leading-tight">Union Events</h2>
+          <p className="text-stone-500 font-medium italic">Shared gatherings registry.</p>
+        </div>
+        {!isAuthorized && (
+          <div className="flex flex-col items-end gap-2 text-left">
+            <div className="flex gap-2">
+              <input 
+                type="password" 
+                placeholder="Access Code"
+                className={`bg-white border-2 ${showError ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-2 text-sm focus:border-amber-900 focus:outline-none transition-all font-bold w-32`}
+                value={passInput}
+                onChange={e => setPassInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleUnlock()}
+              />
+              <button onClick={handleUnlock} className="bg-amber-900 text-white p-2 rounded-xl hover:bg-amber-800 transition-all shadow-md text-left"><Lock className="w-5 h-5" /></button>
+            </div>
+            {showError && <span className="text-[10px] text-red-500 font-black uppercase">Denied</span>}
+          </div>
+        )}
+        {isAuthorized && (
+           <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-xl border border-green-200">
+              <Unlock className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-black text-green-700 uppercase tracking-widest text-left">Tools Unlocked</span>
+           </div>
+        )}
+      </div>
+
+      {isAuthorized && (
+        <div className="bg-stone-900 text-stone-100 rounded-[3rem] p-10 mb-16 shadow-2xl border-b-8 border-amber-900 animate-in slide-in-from-top-4 text-left">
+          <h3 className="text-2xl font-serif font-bold mb-8 flex items-center gap-3 text-left">
+            {editingId ? <Edit2 className="w-6 h-6 text-amber-50" /> : <Plus className="w-6 h-6 text-amber-50" />} 
+            {editingId ? 'Modify Event Entry' : 'Plan Milestone'}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+            <div className="space-y-6 text-left">
+              <input className="w-full bg-stone-800 border-2 border-stone-700 rounded-2xl p-4 font-bold text-left text-left" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
+              <input type="date" className="w-full bg-stone-800 border-2 border-stone-700 rounded-2xl p-4 font-bold text-stone-300 text-left text-left" value={date} onChange={e => setDate(e.target.value)} />
+              <div className="flex items-center gap-4 text-left"><div className="w-16 h-16 rounded-xl bg-stone-800 border-2 border-stone-700 flex items-center justify-center overflow-hidden shrink-0 text-left">{photo ? <img src={photo} className="w-full h-full object-cover text-left" alt="Event" /> : <Camera className="w-6 h-6 text-stone-600 text-left" />}</div><label className="cursor-pointer flex-1 text-left"><div className="bg-stone-800 border-2 border-stone-700 border-dashed rounded-xl p-3 text-center text-left"><Upload className="w-4 h-4 text-amber-500 mx-auto mb-1 text-left" /><span className="text-[10px] font-black uppercase text-stone-400 text-left">Pick Photo</span></div><input type="file" className="hidden" accept="image/*" onChange={handlePhoto} /></label></div>
+            </div>
+            <textarea className="w-full flex-1 bg-stone-800 border-2 border-stone-700 rounded-2xl p-4 font-medium text-sm text-left" placeholder="Archival notes..." value={desc} onChange={e => setDesc(e.target.value)} />
+          </div>
+          <div className="flex gap-4 mt-10 text-left">
+            {editingId && <button onClick={() => { setEditingId(null); setTitle(""); setDate(""); setDesc(""); setPhoto(null); }} className="px-8 py-4 rounded-2xl border border-stone-600 font-bold uppercase text-stone-400">Discard</button>}
+            <button onClick={async () => { if(!title || !date) return; await handleUpsertEvent({ id: editingId, title, date, description: desc, photo }); setEditingId(null); setTitle(""); setDate(""); setDesc(""); setPhoto(null); }} className="flex-1 bg-amber-600 text-stone-900 py-4 rounded-2xl font-black uppercase shadow-xl hover:bg-amber-500 text-center">{editingId ? 'Update Record' : 'Record Milestone'}</button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-12 text-left">
+        {sorted.map(ev => (
+          <div key={ev.id} className="bg-white rounded-[3rem] shadow-lg border border-stone-100 overflow-hidden flex flex-col md:flex-row group hover:shadow-2xl transition-all duration-500 text-left">
+            {ev.photo && <div className="md:w-1/3 h-64 md:h-auto overflow-hidden text-left"><img src={ev.photo} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 text-left" alt={String(ev.title)} /></div>}
+            <div className="flex-1 p-10 text-left text-left">
+              <div className="flex justify-between items-start text-left text-left text-left">
+                <div className="text-left text-left text-left">
+                  <div className="px-3 py-1 bg-amber-100 rounded-full text-[10px] font-black text-amber-900 uppercase tracking-widest inline-flex items-center gap-2 mb-4 text-left"><Clock className="w-3 h-3 text-left" /> {new Date(ev.date).toLocaleDateString()}</div>
+                  <h3 className="text-3xl font-serif font-bold text-stone-800 text-left text-left">{String(ev.title || 'Untitled Gathering')}</h3>
+                </div>
+                {isAuthorized && (
+                  <div className="flex gap-2 text-left text-left text-left">
+                    <button onClick={() => { setEditingId(ev.id); setTitle(ev.title); setDate(ev.date); setDesc(ev.description || ""); setPhoto(ev.photo || null); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="p-3 text-stone-200 hover:text-amber-600 rounded-xl transition-all text-left"><Edit2 className="w-5 h-5 text-left" /></button>
+                    <button onClick={() => handleDeleteEvent(ev.id)} className="p-3 text-stone-200 hover:text-red-600 rounded-xl transition-all text-left text-left"><Trash2 className="w-5 h-5 text-left" /></button>
+                  </div>
+                )}
+              </div>
+              <p className="text-stone-600 italic mt-6 text-left">"{String(ev.description || 'Itinerary pending.')}"</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BulletinBoard({ messages, broadcasts, handleAddBroadcast, isAdminMode, setIsAdminMode, db, appId }) {
+  const [msgInput, setMsgInput] = useState("");
+  const [bcInput, setBcInput] = useState("");
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto pt-24 lg:pt-12 pb-40 text-left">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 text-left">
+        <h2 className="text-3xl font-serif font-bold text-stone-800 text-left">The Town Square</h2>
+        <button onClick={() => setIsAdminMode(!isAdminMode)} className={`px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm border-2 transition-all ${isAdminMode ? 'bg-amber-900 border-amber-900 text-white shadow-lg text-left' : 'border-stone-200 text-stone-50 text-stone-500 hover:bg-stone-100'}`}><ShieldCheck className="w-4 h-4 text-left" /> {isAdminMode ? "Admin Active" : "Login as Admin"}</button>
+      </div>
+      {isAdminMode && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-8 shadow-md text-left text-left">
+          <h3 className="text-amber-900 font-bold flex items-center gap-2 mb-4 text-left"><Megaphone className="w-5 h-5 text-left" /> Broadcast Tool</h3>
+          <textarea className="w-full p-4 border-2 border-amber-200 rounded-xl mb-4 bg-white font-medium text-left" rows="3" placeholder="Post announcement..." value={bcInput} onChange={e => setBcInput(e.target.value)} />
+          <button onClick={() => { handleAddBroadcast(bcInput); setBcInput(""); }} className="w-full bg-amber-900 text-white py-3 rounded-xl font-bold hover:bg-amber-800 text-center text-left">Announce to Family</button>
+        </div>
+      )}
+      <div className="space-y-4 mb-12 text-left">
+        {(broadcasts || []).sort((a,b) => b.timestamp - a.timestamp).map(bc => (<div key={bc.id} className="bg-stone-900 text-amber-100 p-8 rounded-3xl shadow-xl relative overflow-hidden group text-left text-left text-left"><div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 scale-150 text-left"><Megaphone className="w-32 h-32 text-left" /></div><div className="relative z-10 text-left text-left"><div className="flex items-center gap-2 mb-4 text-[10px] font-bold uppercase tracking-widest text-amber-500 text-left text-left"><ShieldCheck className="w-3 h-3 text-left" /> OFFICIAL BROADCAST • {String(bc.author || 'Admin')}</div><p className="text-2xl font-serif leading-snug text-left text-left">{String(bc.text)}</p><div className="mt-6 flex items-center justify-between opacity-40 text-[10px] border-t border-amber-100/10 pt-4 text-left text-left"><span>{new Date(bc.timestamp).toLocaleString()}</span></div></div></div>))}
+      </div>
+      <div className="bg-white border border-stone-200 rounded-3xl shadow-xl overflow-hidden flex flex-col h-[600px] text-left">
+        <div className="bg-stone-50 p-6 border-b border-stone-100 text-left"><h3 className="font-bold text-stone-800 flex items-center gap-2 text-left text-left"><MessageSquare className="w-4 h-4 text-stone-400 text-left" /> Family Chat</h3></div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[url('https://www.transparenttextures.com/patterns/notebook.png')] text-left">
+          {(messages || []).sort((a,b) => a.timestamp - b.timestamp).map(m => (
+            <div key={m.id} className="flex flex-col group items-start text-left text-left">
+              <div className="flex items-center gap-2 mb-1 px-2 text-left text-left">
+                <span className="text-[10px] font-bold text-stone-900 text-left text-left">{String(m.sender || 'Family')}</span>
+                <span className="text-[10px] text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity text-left text-left">{new Date(m.timestamp).toLocaleTimeString()}</span>
+              </div>
+              <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-stone-100 shadow-sm inline-block max-w-[85%] text-stone-800 text-sm text-left">{String(m.text)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="p-6 bg-white border-t border-stone-100 text-left text-left">
+          <div className="flex gap-3 bg-stone-50 p-2 rounded-2xl border border-stone-200 shadow-inner text-left text-left">
+            <input 
+              className="flex-1 bg-transparent p-3 rounded-xl focus:outline-none text-sm font-bold text-left" 
+              placeholder="Chat message..." 
+              value={msgInput} 
+              onChange={e => setMsgInput(e.target.value)} 
+              onKeyDown={e => e.key === 'Enter' && (addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), { text: msgInput, sender: "Family Member", timestamp: Date.now() }), setMsgInput(""))} 
+            />
+            <button onClick={() => { if(!msgInput.trim()) return; addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), { text: msgInput, sender: "Family Member", timestamp: Date.now() }); setMsgInput(""); }} className="bg-stone-900 text-white px-6 py-2 rounded-xl font-bold shadow-md text-center text-left">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberModal({ member, onClose, handleUpsertMember }) {
+  const [form, setForm] = useState({ name: "", relation: "Son of", email: "", phone: "", photoUrl: "", bio: "", testField: "", password: "" });
+  const [verifyPassword, setVerifyPassword] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (member) {
+      setForm({ ...member, password: '' });
+    } else {
+      setForm({ name: "", relation: "Son of", email: "", phone: "", photoUrl: "", bio: "", testField: "", password: "" });
+    }
+    setError("");
+    setVerifyPassword("");
+  }, [member]);
+
+  const handlePhoto = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || file.size > 800000) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setForm(f => ({ ...f, photoUrl: reader.result }));
+    reader.readAsDataURL(file);
+  };
+
+  const handleCommit = () => {
+    if (!form.name) {
+      setError("Lineage entry requires a name.");
+      return;
+    }
+
+    if (!member) {
+      if (!form.password || form.password.length < 4) {
+        setError("Account creation requires a security password (min 4 chars).");
+        return;
+      }
+      handleUpsertMember(form);
+    } else {
+      if (verifyPassword !== member.password) {
+        setError("Verification code incorrect. Edits denied.");
+        return;
+      }
+      handleUpsertMember({ ...form, id: member.id, password: member.password });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-md z-[250] flex items-center justify-center p-4 overflow-y-auto text-left text-left">
+      <div className="bg-stone-50 w-full max-w-xl rounded-[3rem] shadow-2xl overflow-hidden border-t-8 border-amber-900 my-8 animate-in zoom-in-95 duration-300 text-left text-left">
+        <div className="p-10 text-left text-left text-left text-left">
+          <h3 className="text-3xl font-serif font-bold text-stone-800 mb-8 text-left text-left">{member ? 'Update Archives' : 'Register Ancestry'}</h3>
+          
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-2xl border border-red-100 flex items-center gap-3 mb-8 text-sm font-bold animate-pulse text-left text-left">
+              <AlertCircle className="w-5 h-5 shrink-0 text-left" /> {String(error)}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+            <div className="sm:col-span-2 text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-3 text-left">Portrait</label><div className="flex items-center gap-6 text-left text-left text-left"><div className="w-28 h-28 rounded-[1.5rem] bg-stone-200 border-2 border-stone-300 flex items-center justify-center overflow-hidden shrink-0 text-left">{form.photoUrl ? <img src={form.photoUrl} className="w-full h-full object-cover text-left" alt="Portrait" /> : <Camera className="w-10 h-10 text-stone-400 text-left text-left" />}</div><label className="flex-1 cursor-pointer text-left text-left"><div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-stone-300 rounded-[1.5rem] bg-white hover:border-amber-900 transition-all text-left text-left text-left"><Upload className="w-6 h-6 text-stone-400 mb-2 text-left text-left" /><span className="text-[10px] font-black text-stone-500 uppercase text-left text-left text-left">Change Photo</span></div><input type="file" className="hidden" accept="image/*" onChange={handlePhoto} /></label></div></div>
+            <div className="sm:col-span-2 text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 text-left">Legal Name</label><input className="w-full p-4 border-2 border-stone-200 rounded-2xl focus:border-amber-900 focus:outline-none font-bold text-left text-left" value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+            <div className="text-left text-left text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 text-left text-left">Relation</label><select className="w-full p-4 border-2 border-stone-200 rounded-2xl focus:border-amber-900 focus:outline-none font-bold text-left text-left text-left" value={form.relation} onChange={e => setForm({...form, relation: e.target.value})}>{RELATIONS_LIST.map(r => <option key={r} value={r}>{r}</option>)}</select></div>
+            <div className="text-left text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 flex items-center gap-1 text-left text-left"><Beaker className="w-3 h-3 text-amber-600 text-left" /> Notes</label><input className="w-full p-4 border-2 border-stone-200 rounded-2xl focus:border-amber-900 focus:outline-none bg-amber-50/30 font-bold text-left text-left text-left" value={form.testField || ""} onChange={e => setForm({...form, testField: e.target.value})} /></div>
+            <div className="text-left text-left text-left text-left text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 text-left text-left">Phone</label><input className="w-full p-4 border-2 border-stone-200 rounded-2xl focus:border-amber-900 focus:outline-none font-bold text-left text-left text-left" value={form.phone || ""} onChange={e => setForm({...form, phone: e.target.value})} /></div>
+            <div className="text-left text-left text-left text-left text-left text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 text-left text-left">Email</label><input className="w-full p-4 border-2 border-stone-200 rounded-2xl focus:border-amber-900 focus:outline-none font-bold text-left text-left text-left" value={form.email || ""} onChange={e => setForm({...form, email: e.target.value})} /></div>
+            <div className="sm:col-span-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left"><label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 text-left text-left">Archive Bio</label><textarea className="w-full p-4 border-2 border-stone-200 rounded-2xl h-32 focus:border-amber-900 focus:outline-none font-medium text-left text-left text-left text-left" value={form.bio || ""} onChange={e => setForm({...form, bio: e.target.value})} /></div>
+            
+            <div className="sm:col-span-2 border-t pt-6 text-left text-left">
+              <label className="block text-[10px] font-black text-amber-900 uppercase tracking-widest mb-3 flex items-center gap-2 text-left">
+                <KeyRound className="w-4 h-4 text-left" /> {member ? "Account Validation Required" : "Set Profile Security Code"}
+              </label>
+              <div className="relative text-left">
+                <input 
+                  type="password"
+                  className="w-full p-4 pr-12 border-2 border-amber-100 rounded-2xl focus:border-amber-900 focus:outline-none font-black text-amber-900 tracking-widest text-left"
+                  placeholder={member ? "Verify code to save" : "Create entry code"}
+                  value={member ? verifyPassword : form.password}
+                  onChange={e => member ? setVerifyPassword(e.target.value) : setForm({...form, password: e.target.value})}
+                />
+                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-200 text-left" />
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-4 mt-10 text-left"><button onClick={onClose} className="flex-1 py-4 rounded-2xl border-2 font-black text-stone-400 hover:bg-stone-100 text-center text-left">Discard</button><button onClick={handleCommit} className="flex-1 py-4 rounded-2xl bg-stone-900 text-white font-black shadow-xl text-center text-left">Commit Archives</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Application Component ---
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('tree');
+  const [members, setMembers] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [broadcasts, setBroadcasts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingMember, setEditingMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarMobileOpen, setIsSidebarMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth failed:", err);
+      }
+    };
+    initAuth();
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubMembers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'members'), (s) => {
+      const data = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMembers(data);
+      if (selectedMember) {
+        const updated = data.find(m => m.id === selectedMember.id);
+        if (updated) setSelectedMember(updated);
+      }
+      setLoading(false);
+    });
+    const unsubEvents = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'events'), s => setEvents(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsubMessages = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'messages'), s => setMessages(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsubBroadcasts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'broadcasts'), s => setBroadcasts(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return () => { unsubMembers(); unsubEvents(); unsubMessages(); unsubBroadcasts(); };
+  }, [user, selectedMember?.id]);
+
+  const handleUpsertMember = async (data) => {
+    if (data.id) {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', data.id), { ...data, updatedAt: Date.now() });
+    } else {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'members'), { ...data, updatedAt: Date.now(), updates: [], album: [] });
+    }
+    setIsModalOpen(false);
+    setEditingMember(null);
+  };
+
+  const handleUpsertEvent = async (data) => {
+    if (!data.title || !data.date) return;
+    if (data.id) {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', data.id), { ...data, updatedAt: Date.now() });
+    } else {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), { ...data, updatedAt: Date.now() });
+    }
+  };
+
+  const handleDeleteMember = async (member) => {
+    const entered = window.prompt(`Access code for ${member.name}:`);
+    if (entered === member.password) {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', member.id));
+    } else {
+      window.alert("Invalid. Record preserved.");
+    }
+  };
+
+  const handleDeleteEvent = async (id) => {
+    if (!id || !window.confirm("Archive this event?")) return;
+    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', id));
+  };
+
+  if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-stone-100 text-stone-400 text-left text-left"><TreePine className="w-16 h-16 text-amber-800 animate-bounce mb-6 text-left" /><p className="font-serif italic text-lg text-stone-600 text-left">Accessing ancestry records...</p></div>;
+
+  return (
+    <div className="min-h-screen bg-stone-50 text-stone-900 flex overflow-x-hidden text-left text-left">
+      <HeaderMobile isOpen={isSidebarMobileOpen} setIsOpen={setIsSidebarMobileOpen} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} setSelectedMember={setSelectedMember} setEditingMember={setEditingMember} setIsModalOpen={setIsModalOpen} setIsSearchOpen={setIsSearchOpen} isMobileOpen={isSidebarMobileOpen} setIsMobileOpen={setIsSidebarMobileOpen} />
+      
+      <div className="flex-1 flex flex-col lg:pl-72 min-h-screen text-left text-left text-left">
+        <main className="flex-1 text-left text-left text-left">
+          {selectedMember ? (
+            <MemberDetail 
+              member={selectedMember} 
+              setSelectedMember={setSelectedMember} 
+              setEditingMember={setEditingMember} 
+              setIsModalOpen={setIsModalOpen} 
+              handleAddUpdate={(id, t, i) => updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', id), { updates: arrayUnion({ text: t, image: i || null, timestamp: Date.now() }) })} 
+              handleAddToAlbum={(id, p, d) => updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'members', id), { album: arrayUnion({ photo: p, description: d, timestamp: Date.now() }) })} 
+            />
+          ) : (
+            <>
+              {activeTab === 'tree' && <FamilyTree members={members} setSelectedMember={setSelectedMember} setEditingMember={setEditingMember} setIsModalOpen={setIsModalOpen} />}
+              {activeTab === 'members' && <MemberDirectory members={members} setSelectedMember={setSelectedMember} setEditingMember={setEditingMember} setIsModalOpen={setIsModalOpen} handleDeleteMember={handleDeleteMember} />}
+              {activeTab === 'comms' && <BulletinBoard messages={messages} broadcasts={broadcasts} handleAddBroadcast={(text) => addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'broadcasts'), { text, author: ADMIN_NAME, timestamp: Date.now() })} isAdminMode={isAdminMode} setIsAdminMode={setIsAdminMode} db={db} appId={appId} />}
+              {activeTab === 'events' && <EventsPage events={events} handleUpsertEvent={handleUpsertEvent} handleDeleteEvent={handleDeleteEvent} />}
+            </>
+          )}
+        </main>
+        
+        <footer className="bg-stone-950 text-white pt-20 pb-40 text-center border-t border-amber-900/20 text-left text-left text-left">
+          <div className="max-w-lg mx-auto px-6 text-center text-left text-left text-left">
+            <TreePine className="w-8 h-8 mx-auto mb-6 text-amber-900/50 text-center text-left" />
+            <h4 className="text-white font-serif text-xl mb-4 text-center text-left">{FAMILY_NAME}</h4>
+            <p className="text-xs leading-loose opacity-80 uppercase tracking-[0.3em] mb-4 italic text-center text-left">Protected Digital Archival by {ADMIN_NAME}</p>
+            <div className="text-[10px] font-black tracking-widest text-white/50 uppercase text-center text-left text-left">Managed by Derrick</div>
+          </div>
+        </footer>
+      </div>
+      
+      {isModalOpen && <MemberModal member={editingMember} onClose={() => { setIsModalOpen(false); setEditingMember(null); }} handleUpsertMember={handleUpsertMember} />}
+      <SearchSidebar isOpen={isSearchOpen} setIsOpen={setIsSearchOpen} searchQuery={searchQuery} setSearchQuery={setSearchQuery} members={members} setSelectedMember={setSelectedMember} />
+      <FamilyTicker members={members} />
+    </div>
+  );
+}
