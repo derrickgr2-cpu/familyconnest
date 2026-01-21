@@ -209,7 +209,8 @@ async def create_member(member_data: FamilyMemberCreate, user = Depends(get_curr
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.family_members.insert_one(member_doc)
-    del member_doc["_id"] if "_id" in member_doc else None
+    if "_id" in member_doc:
+        del member_doc["_id"]
     return FamilyMember(**member_doc)
 
 @api_router.get("/members", response_model=List[FamilyMember])
