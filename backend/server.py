@@ -45,6 +45,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
+    photo_url: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -55,6 +56,7 @@ class UserResponse(BaseModel):
     email: str
     name: str
     is_admin: bool = False
+    photo_url: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -207,6 +209,7 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "password": hashed_pw,
         "is_admin": is_admin,
+        "photo_url": user_data.photo_url,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -214,7 +217,7 @@ async def register(user_data: UserCreate):
     token = create_token(user_id, user_data.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name, is_admin=is_admin)
+        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name, is_admin=is_admin, photo_url=user_data.photo_url)
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
@@ -226,12 +229,12 @@ async def login(credentials: UserLogin):
     token = create_token(user["id"], user["email"])
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False))
+        user=UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"))
     )
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(user = Depends(get_current_user)):
-    return UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False))
+    return UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"))
 
 # ==================== FAMILY MEMBERS ROUTES ====================
 
