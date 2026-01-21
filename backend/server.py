@@ -321,7 +321,11 @@ async def delete_member(member_id: str, user = Depends(get_current_user)):
 
 @api_router.post("/members/{member_id}/photos", response_model=Photo)
 async def add_photo(member_id: str, photo_data: PhotoAdd, user = Depends(get_current_user)):
-    member = await db.family_members.find_one({"id": member_id, "created_by": user["id"]})
+    # Admin can add photos to any member
+    if user.get("is_admin", False):
+        member = await db.family_members.find_one({"id": member_id})
+    else:
+        member = await db.family_members.find_one({"id": member_id, "created_by": user["id"]})
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     
@@ -341,20 +345,31 @@ async def add_photo(member_id: str, photo_data: PhotoAdd, user = Depends(get_cur
 
 @api_router.get("/members/{member_id}/photos", response_model=List[Photo])
 async def get_photos(member_id: str, user = Depends(get_current_user)):
-    member = await db.family_members.find_one(
-        {"id": member_id, "created_by": user["id"]},
-        {"_id": 0, "photos": 1}
-    )
+    # Admin can view photos for any member
+    if user.get("is_admin", False):
+        member = await db.family_members.find_one({"id": member_id}, {"_id": 0, "photos": 1})
+    else:
+        member = await db.family_members.find_one(
+            {"id": member_id, "created_by": user["id"]},
+            {"_id": 0, "photos": 1}
+        )
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     return [Photo(**p) for p in member.get("photos", [])]
 
 @api_router.delete("/members/{member_id}/photos/{photo_id}")
 async def delete_photo(member_id: str, photo_id: str, user = Depends(get_current_user)):
-    result = await db.family_members.update_one(
-        {"id": member_id, "created_by": user["id"]},
-        {"$pull": {"photos": {"id": photo_id}}}
-    )
+    # Admin can delete photos from any member
+    if user.get("is_admin", False):
+        result = await db.family_members.update_one(
+            {"id": member_id},
+            {"$pull": {"photos": {"id": photo_id}}}
+        )
+    else:
+        result = await db.family_members.update_one(
+            {"id": member_id, "created_by": user["id"]},
+            {"$pull": {"photos": {"id": photo_id}}}
+        )
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Photo not found")
     return {"message": "Photo deleted successfully"}
