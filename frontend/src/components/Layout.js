@@ -18,7 +18,8 @@ import {
     User,
     Menu,
     X,
-    MessageSquare
+    MessageSquare,
+    Image
 } from 'lucide-react';
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
     { path: '/members', label: 'Members', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
     { path: '/forum', label: 'Forum', icon: MessageSquare },
+    { path: '/my-album', label: 'My Album', icon: Image },
 ];
 
 export default function Layout({ children }) {
