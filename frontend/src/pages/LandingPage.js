@@ -181,9 +181,10 @@ export default function LandingPage() {
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                             {members.slice(0, 12).map((member, index) => (
-                                <div 
+                                <Link 
                                     key={member.id}
-                                    className="flex flex-col items-center text-center animate-fade-in-up"
+                                    to={`/album/${member.id}`}
+                                    className="flex flex-col items-center text-center animate-fade-in-up group cursor-pointer"
                                     style={{ animationDelay: `${index * 0.1}s` }}
                                     data-testid={`preview-member-${member.id}`}
                                 >
@@ -191,20 +192,23 @@ export default function LandingPage() {
                                         <img 
                                             src={member.photo_url} 
                                             alt={member.name}
-                                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-[#D4A017] shadow-lg mb-3"
+                                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-[#D4A017] shadow-lg mb-3 group-hover:scale-105 group-hover:border-[#8A9A5B] transition-all duration-300"
                                         />
                                     ) : (
-                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#8A9A5B]/20 flex items-center justify-center border-4 border-[#D4A017] shadow-lg mb-3">
+                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#8A9A5B]/20 flex items-center justify-center border-4 border-[#D4A017] shadow-lg mb-3 group-hover:scale-105 group-hover:border-[#8A9A5B] transition-all duration-300">
                                             <User className="h-8 w-8 sm:h-10 sm:w-10 text-[#8A9A5B]" />
                                         </div>
                                     )}
-                                    <h3 className="font-serif font-semibold text-[#4A3728] text-sm sm:text-base">
+                                    <h3 className="font-serif font-semibold text-[#4A3728] text-sm sm:text-base group-hover:text-[#8A9A5B] transition-colors">
                                         {member.name}
                                     </h3>
                                     <p className="text-[#8A9A5B] text-xs sm:text-sm">
                                         {member.relationship}
                                     </p>
-                                </div>
+                                    <p className="text-[#D4A017] text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        View Album →
+                                    </p>
+                                </Link>
                             ))}
                         </div>
 
