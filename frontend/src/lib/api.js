@@ -37,6 +37,15 @@ export const authApi = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
     getMe: () => api.get('/auth/me'),
+    // User photo album
+    getPhotos: () => api.get('/auth/photos'),
+    addPhoto: (data) => api.post('/auth/photos', data),
+    deletePhoto: (photoId) => api.delete(`/auth/photos/${photoId}`),
+};
+
+// Public user endpoint
+export const usersApi = {
+    getPublic: (userId) => api.get(`/users/${userId}/public`),
 };
 
 // Members API
