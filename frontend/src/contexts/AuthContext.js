@@ -68,10 +68,13 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
+    const isAdmin = user?.is_admin || false;
+
     const value = {
         user,
         loading,
         isAuthenticated,
+        isAdmin,
         login,
         register,
         logout,
