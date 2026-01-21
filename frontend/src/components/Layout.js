@@ -85,9 +85,17 @@ export default function Layout({ children }) {
                                         className="flex items-center gap-2 text-[#4A3728] hover:bg-[#4A3728]/10"
                                         data-testid="user-menu-trigger"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-[#8A9A5B] flex items-center justify-center text-white font-semibold">
-                                            {user?.name?.charAt(0).toUpperCase() || 'U'}
-                                        </div>
+                                        {user?.photo_url ? (
+                                            <img 
+                                                src={user.photo_url} 
+                                                alt={user.name}
+                                                className="w-8 h-8 rounded-full object-cover border-2 border-[#D4A017]"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-[#8A9A5B] flex items-center justify-center text-white font-semibold">
+                                                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                                            </div>
+                                        )}
                                         <div className="hidden sm:flex flex-col items-start">
                                             <span className="font-medium">{user?.name}</span>
                                             {isAdmin && (
