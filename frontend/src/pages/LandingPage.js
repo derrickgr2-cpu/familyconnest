@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { membersApi } from '../lib/api';
 import { Button } from '../components/ui/button';
-import { TreePine, Users, Calendar, Camera, Heart } from 'lucide-react';
+import { TreePine, Users, Calendar, Camera, Heart, User } from 'lucide-react';
 
 export default function LandingPage() {
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchMembers();
+    }, []);
+
+    const fetchMembers = async () => {
+        try {
+            const response = await membersApi.getAllPublic();
+            setMembers(response.data);
+        } catch (error) {
+            console.error('Failed to fetch members:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen">
             {/* Hero Section */}
