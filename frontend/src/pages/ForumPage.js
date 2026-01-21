@@ -29,7 +29,7 @@ import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 
 export default function ForumPage() {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,7 +198,7 @@ export default function ForumPage() {
                                             </span>
                                         </div>
                                     </div>
-                                    {post.author_id === user?.id && (
+                                    {(post.author_id === user?.id || isAdmin) && (
                                         <div className="flex gap-1">
                                             <Button
                                                 variant="ghost"
@@ -258,7 +258,7 @@ export default function ForumPage() {
                                                                 {reply.author_name} • {format(parseISO(reply.created_at), 'MMM d, h:mm a')}
                                                             </p>
                                                         </div>
-                                                        {reply.author_id === user?.id && (
+                                                        {(reply.author_id === user?.id || isAdmin) && (
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
