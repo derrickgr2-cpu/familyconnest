@@ -569,9 +569,17 @@ async def health_check():
 @api_router.post("/upload")
 async def upload_file(file: UploadFile = File(...), user = Depends(get_current_user)):
     # Validate file type
-    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif"]
     if file.content_type not in allowed_types:
-        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, GIF, WebP allowed.")
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, GIF, WebP, HEIC allowed.")
+    
+    # Check file size (allow up to 50MB)
+    contents = await file.read()
+    file_size = len(contents)
+    max_size = 50 * 1024 * 1024  # 50MB
+    
+    if file_size > max_size:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
     
     # Generate unique filename
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
@@ -580,10 +588,10 @@ async def upload_file(file: UploadFile = File(...), user = Depends(get_current_u
     
     # Save file
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(contents)
     
     # Return the URL path
-    return {"url": f"/uploads/{unique_filename}", "filename": unique_filename}
+    return {"url": f"/uploads/{unique_filename}", "filename": unique_filename, "size": file_size}
 
 # Include router and middleware
 app.include_router(api_router)
