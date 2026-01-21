@@ -1,34 +1,320 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* Main App Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+/* Hero Section */
+.hero-section {
     min-height: 100vh;
+    background-image: 
+        linear-gradient(180deg, rgba(74,55,40,0.7) 0%, rgba(44,27,16,0.85) 100%),
+        url('https://images.unsplash.com/photo-1722435692478-c224d3cd472a?crop=entropy&cs=srgb&fm=jpg&q=85');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Navigation */
+.nav-link {
+    position: relative;
+    color: #5D4037;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #4A3728;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #8A9A5B;
+    transition: width 0.2s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.nav-link.active {
+    color: #4A3728;
+}
+
+.nav-link.active::after {
+    width: 100%;
+}
+
+/* Card styles */
+.family-card {
+    background-color: #FFF8F0;
+    border: 1px solid #E6D0B3;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.family-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px 0 rgba(74,55,40,0.18);
+}
+
+.family-card-accent {
+    border-top: 4px solid #8A9A5B;
+}
+
+/* Form inputs */
+.form-input {
+    background-color: white;
+    border: 1px solid #D7C0A0;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #8A9A5B;
+    box-shadow: 0 0 0 3px rgba(138, 154, 91, 0.15);
+}
+
+/* Primary button */
+.btn-primary {
+    background-color: #4A3728;
+    color: #FAF0E6;
+    border-radius: 9999px;
+    padding: 0.75rem 2rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 14px 0 rgba(74,55,40,0.25);
+}
+
+.btn-primary:hover {
+    background-color: #3E2D20;
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Secondary button */
+.btn-secondary {
+    background-color: transparent;
+    color: #4A3728;
+    border: 2px solid #4A3728;
+    border-radius: 9999px;
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #4A3728;
+    color: #FAF0E6;
+}
+
+/* Calendar styling */
+.calendar-day {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background-color: rgba(138, 154, 91, 0.15);
+}
+
+.calendar-day.selected {
+    background-color: #4A3728;
+    color: #FAF0E6;
+}
+
+.calendar-day.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #D4A017;
+}
+
+/* Photo gallery masonry */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.photo-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    aspect-ratio: 1;
+    cursor: pointer;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.photo-item:hover img {
+    transform: scale(1.05);
+}
+
+.photo-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgba(44,27,16,0.6) 100%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.photo-item:hover::after {
+    opacity: 1;
+}
+
+/* Family tree visualization */
+.tree-node {
+    background-color: #FFF8F0;
+    border: 2px solid #8A9A5B;
+    border-radius: 1rem;
+    padding: 1rem;
+    text-align: center;
+    min-width: 150px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tree-node:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px 0 rgba(74,55,40,0.2);
+}
+
+.tree-node-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #D4A017;
+    margin: 0 auto 0.5rem;
+}
+
+/* Sidebar styling */
+.sidebar {
+    background-color: #4A3728;
+    min-height: 100vh;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    color: rgba(250, 240, 230, 0.8);
+    border-radius: 0.5rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FAF0E6;
+}
+
+.sidebar-link.active {
+    background-color: rgba(138, 154, 91, 0.3);
+    color: #FAF0E6;
+}
+
+/* Modal overlay */
+.modal-overlay {
+    background-color: rgba(44, 27, 16, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+/* Profile avatar */
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #D4A017;
+    box-shadow: 0 8px 24px 0 rgba(74,55,40,0.25);
+}
+
+/* Badge */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-primary {
+    background-color: rgba(138, 154, 91, 0.2);
+    color: #5D7039;
+}
+
+.badge-accent {
+    background-color: rgba(212, 160, 23, 0.2);
+    color: #9B7410;
+}
+
+/* Empty state */
+.empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+    padding: 4rem 2rem;
+    text-align: center;
 }
 
-.App-link {
-    color: #61dafb;
+.empty-state-icon {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(138, 154, 91, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
+/* Toast customization */
+.sonner-toast {
+    background-color: #FFF8F0 !important;
+    border: 1px solid #E6D0B3 !important;
+    color: #2C1B10 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 80vh;
     }
-    to {
-        transform: rotate(360deg);
+    
+    .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
     }
 }

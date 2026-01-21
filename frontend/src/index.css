@@ -1,75 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Caveat:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --deep-oak: #4A3728;
+    --sage-leaf: #8A9A5B;
+    --amber-resin: #D4A017;
+    --parchment: #FAF0E6;
+    --warm-paper: #FFF8F0;
+    --text-primary: #2C1B10;
+    --text-secondary: #5D4037;
+    --border-warm: #E6D0B3;
+    --border-light: #D7C0A0;
+}
+
 body {
     margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+    font-family: 'Nunito', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--parchment);
+    color: var(--text-primary);
+}
+
+.font-serif {
+    font-family: 'Playfair Display', serif;
+}
+
+.font-sans {
+    font-family: 'Nunito', sans-serif;
+}
+
+.font-handwriting {
+    font-family: 'Caveat', cursive;
 }
 
 code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--parchment);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--deep-oak);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Custom selection */
+::selection {
+    background-color: var(--amber-resin);
+    color: var(--text-primary);
 }
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
-    }
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+        --background: 40 33% 96%;
+        --foreground: 20 40% 12%;
+        --card: 36 47% 97%;
+        --card-foreground: 20 40% 12%;
+        --popover: 36 47% 97%;
+        --popover-foreground: 20 40% 12%;
+        --primary: 24 30% 22%;
+        --primary-foreground: 40 33% 96%;
+        --secondary: 75 27% 48%;
+        --secondary-foreground: 40 33% 96%;
+        --muted: 30 25% 88%;
+        --muted-foreground: 16 18% 34%;
+        --accent: 43 78% 46%;
+        --accent-foreground: 20 40% 12%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 40 33% 96%;
+        --border: 32 30% 80%;
+        --input: 32 30% 80%;
+        --ring: 24 30% 22%;
+        --chart-1: 24 30% 22%;
+        --chart-2: 75 27% 48%;
+        --chart-3: 43 78% 46%;
+        --chart-4: 30 25% 65%;
+        --chart-5: 16 18% 34%;
+        --radius: 0.75rem;
     }
 }
 
@@ -86,30 +108,142 @@ code {
     [data-debug-wrapper="true"] {
         display: contents !important;
     }
+}
 
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
+/* Wood texture overlay */
+.wood-texture {
+    position: relative;
+}
+
+.wood-texture::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1554230253-017daba2b631?crop=entropy&cs=srgb&fm=jpg&q=85');
+    background-size: cover;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Paper texture */
+.paper-texture {
+    background-color: var(--warm-paper);
+    background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+}
+
+/* Oak tree pattern background */
+.oak-bg {
+    background: linear-gradient(180deg, rgba(74,55,40,0.05) 0%, rgba(138,154,91,0.08) 100%);
+}
+
+/* Warm shadow */
+.warm-shadow {
+    box-shadow: 0 4px 14px 0 rgba(74,55,40,0.15);
+}
+
+.warm-shadow-lg {
+    box-shadow: 0 8px 24px 0 rgba(74,55,40,0.2);
+}
+
+/* Entrance animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Stagger animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+/* Tree connector lines for family tree */
+.tree-connector {
+    position: relative;
+}
+
+.tree-connector::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    width: 2px;
+    height: 20px;
+    background-color: var(--sage-leaf);
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px 0 rgba(74,55,40,0.18);
+}
+
+/* Button press effect */
+.btn-press:active {
+    transform: scale(0.98);
+}
+
+/* Glass morphism */
+.glass {
+    background: rgba(255, 248, 240, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Leaf divider */
+.leaf-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.leaf-divider::before,
+.leaf-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--sage-leaf), transparent);
 }
