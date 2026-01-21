@@ -57,6 +57,7 @@ class UserResponse(BaseModel):
     id: str
     email: str
     name: str
+    is_admin: bool = False
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -200,11 +201,15 @@ async def register(user_data: UserCreate):
     user_id = str(uuid.uuid4())
     hashed_pw = hash_password(user_data.password)
     
+    # Check if this is the admin email
+    is_admin = user_data.email.lower() == "samantha@barbour.com"
+    
     user_doc = {
         "id": user_id,
         "email": user_data.email,
         "name": user_data.name,
         "password": hashed_pw,
+        "is_admin": is_admin,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -212,7 +217,7 @@ async def register(user_data: UserCreate):
     token = create_token(user_id, user_data.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name)
+        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name, is_admin=is_admin)
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
@@ -224,12 +229,12 @@ async def login(credentials: UserLogin):
     token = create_token(user["id"], user["email"])
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user["id"], email=user["email"], name=user["name"])
+        user=UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False))
     )
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(user = Depends(get_current_user)):
-    return UserResponse(id=user["id"], email=user["email"], name=user["name"])
+    return UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False))
 
 # ==================== FAMILY MEMBERS ROUTES ====================
 
