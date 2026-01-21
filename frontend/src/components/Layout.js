@@ -17,13 +17,15 @@ import {
     LogOut, 
     User,
     Menu,
-    X
+    X,
+    MessageSquare
 } from 'lucide-react';
 
 const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/members', label: 'Members', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: Calendar },
+    { path: '/forum', label: 'Forum', icon: MessageSquare },
 ];
 
 export default function Layout({ children }) {
