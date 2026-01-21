@@ -166,6 +166,71 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* Family Members Preview Section */}
+            {members.length > 0 && (
+                <section className="py-20 px-6 lg:px-12 bg-[#FFF8F0]" data-testid="family-preview-section">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#4A3728] mb-4">
+                                Meet The Barbour Family
+                            </h2>
+                            <p className="text-[#5D4037] max-w-2xl mx-auto">
+                                Our growing family tree, connected through generations of love and memories.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                            {members.slice(0, 12).map((member, index) => (
+                                <div 
+                                    key={member.id}
+                                    className="flex flex-col items-center text-center animate-fade-in-up"
+                                    style={{ animationDelay: `${index * 0.1}s` }}
+                                    data-testid={`preview-member-${member.id}`}
+                                >
+                                    {member.photo_url ? (
+                                        <img 
+                                            src={member.photo_url} 
+                                            alt={member.name}
+                                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-[#D4A017] shadow-lg mb-3"
+                                        />
+                                    ) : (
+                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#8A9A5B]/20 flex items-center justify-center border-4 border-[#D4A017] shadow-lg mb-3">
+                                            <User className="h-8 w-8 sm:h-10 sm:w-10 text-[#8A9A5B]" />
+                                        </div>
+                                    )}
+                                    <h3 className="font-serif font-semibold text-[#4A3728] text-sm sm:text-base">
+                                        {member.name}
+                                    </h3>
+                                    <p className="text-[#8A9A5B] text-xs sm:text-sm">
+                                        {member.relationship}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {members.length > 12 && (
+                            <div className="text-center mt-8">
+                                <p className="text-[#5D4037]">
+                                    And {members.length - 12} more family members...
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="text-center mt-10">
+                            <Link to="/register">
+                                <Button 
+                                    className="btn-primary"
+                                    data-testid="join-family-btn"
+                                >
+                                    <Users className="h-4 w-4 mr-2" />
+                                    Join Our Family
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* CTA Section */}
             <section className="py-20 px-6 lg:px-12 relative overflow-hidden">
                 <div 
