@@ -34,7 +34,7 @@ security = HTTPBearer()
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# Create the main app
+# Create the main app with increased body size limit
 app = FastAPI()
 
 # Mount static files for uploads
