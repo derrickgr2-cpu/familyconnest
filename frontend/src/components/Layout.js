@@ -151,9 +151,20 @@ export default function Layout({ children }) {
             </header>
 
             {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[calc(100vh-140px)]">
                 {children}
             </main>
+
+            {/* Footer */}
+            <footer className="bg-[#4A3728] py-4 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[#FAF0E6]/70 text-sm">
+                    <div className="flex items-center gap-2">
+                        <TreePine className="h-5 w-5 text-[#D4A017]" />
+                        <span className="font-serif text-[#FAF0E6]">The Barbour Connection</span>
+                    </div>
+                    <p>Developed by Derrick Mitchell</p>
+                </div>
+            </footer>
         </div>
     );
 }
