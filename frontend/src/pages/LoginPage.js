@@ -54,7 +54,7 @@ export default function LoginPage() {
                     <div>
                         <TreePine className="h-16 w-16 text-[#D4A017] mb-6" />
                         <h1 className="font-serif text-4xl font-bold mb-4">
-                            Welcome Back to Your Roots
+                            Welcome Back to The Barbour Connection
                         </h1>
                         <p className="text-[#FAF0E6]/80 text-lg">
                             Continue nurturing your family tree and creating lasting memories.
