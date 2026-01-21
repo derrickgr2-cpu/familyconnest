@@ -13,6 +13,7 @@ import MemberProfilePage from "./pages/MemberProfilePage";
 import CalendarPage from "./pages/CalendarPage";
 import ForumPage from "./pages/ForumPage";
 import PublicAlbumPage from "./pages/PublicAlbumPage";
+import MyAlbumPage from "./pages/MyAlbumPage";
 import Layout from "./components/Layout";
 
 // Protected Route Component
@@ -107,6 +108,13 @@ function AppRoutes() {
                 <ProtectedRoute>
                     <Layout>
                         <ForumPage />
+                    </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/my-album" element={
+                <ProtectedRoute>
+                    <Layout>
+                        <MyAlbumPage />
                     </Layout>
                 </ProtectedRoute>
             } />
