@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import MembersPage from "./pages/MembersPage";
 import MemberProfilePage from "./pages/MemberProfilePage";
 import CalendarPage from "./pages/CalendarPage";
+import ForumPage from "./pages/ForumPage";
 import Layout from "./components/Layout";
 
 // Protected Route Component
@@ -97,6 +98,13 @@ function AppRoutes() {
                 <ProtectedRoute>
                     <Layout>
                         <CalendarPage />
+                    </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/forum" element={
+                <ProtectedRoute>
+                    <Layout>
+                        <ForumPage />
                     </Layout>
                 </ProtectedRoute>
             } />
