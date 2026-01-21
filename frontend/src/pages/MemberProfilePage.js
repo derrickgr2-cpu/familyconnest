@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { membersApi, photosApi } from '../lib/api';
+import { membersApi, photosApi, uploadApi } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -29,7 +29,8 @@ import {
     Plus,
     Calendar,
     Image,
-    X
+    X,
+    Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -50,6 +51,10 @@ export default function MemberProfilePage() {
     const [formData, setFormData] = useState({});
     const [photoData, setPhotoData] = useState({ photo_url: '', caption: '' });
     const [submitting, setSubmitting] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const editFileInputRef = useRef(null);
+    const albumFileInputRef = useRef(null);
 
     useEffect(() => {
         fetchData();
@@ -96,6 +101,40 @@ export default function MemberProfilePage() {
             toast.error('Failed to update member');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleEditFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const response = await uploadApi.upload(file);
+            const backendUrl = process.env.REACT_APP_BACKEND_URL;
+            setFormData({ ...formData, photo_url: `${backendUrl}${response.data.url}` });
+            toast.success('Photo uploaded!');
+        } catch (error) {
+            toast.error('Failed to upload photo');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleAlbumFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingPhoto(true);
+        try {
+            const response = await uploadApi.upload(file);
+            const backendUrl = process.env.REACT_APP_BACKEND_URL;
+            setPhotoData({ ...photoData, photo_url: `${backendUrl}${response.data.url}` });
+            toast.success('Photo uploaded!');
+        } catch (error) {
+            toast.error('Failed to upload photo');
+        } finally {
+            setUploadingPhoto(false);
         }
     };
 
@@ -434,15 +473,53 @@ export default function MemberProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-photo_url" className="text-[#4A3728]">Photo URL</Label>
-                            <Input
-                                id="edit-photo_url"
-                                value={formData.photo_url}
-                                onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                                className="border-[#D7C0A0] focus:border-[#8A9A5B] focus:ring-[#8A9A5B]"
-                                placeholder="https://example.com/photo.jpg"
-                                data-testid="edit-photo-input"
-                            />
+                            <Label htmlFor="edit-photo_url" className="text-[#4A3728]">Photo</Label>
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="file"
+                                    ref={editFileInputRef}
+                                    onChange={handleEditFileUpload}
+                                    accept="image/*"
+                                    className="hidden"
+                                    data-testid="edit-photo-file-input"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => editFileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    className="w-full border-[#D7C0A0] text-[#4A3728] hover:bg-[#8A9A5B]/10"
+                                    data-testid="edit-photo-upload-btn"
+                                >
+                                    {uploading ? (
+                                        <>Uploading...</>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4 mr-2" />
+                                            Upload Photo
+                                        </>
+                                    )}
+                                </Button>
+                                {formData.photo_url && (
+                                    <div className="flex items-center gap-2 p-2 bg-[#FAF0E6] rounded-lg">
+                                        <img 
+                                            src={formData.photo_url} 
+                                            alt="Preview" 
+                                            className="w-10 h-10 rounded object-cover"
+                                        />
+                                        <span className="text-sm text-[#5D4037] truncate flex-1">Photo uploaded</span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setFormData({ ...formData, photo_url: '' })}
+                                            className="h-8 w-8 p-0 text-red-500"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -491,15 +568,53 @@ export default function MemberProfilePage() {
                     </DialogHeader>
                     <form onSubmit={handleAddPhoto} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="photo_url" className="text-[#4A3728]">Photo URL *</Label>
-                            <Input
-                                id="photo_url"
-                                value={photoData.photo_url}
-                                onChange={(e) => setPhotoData({ ...photoData, photo_url: e.target.value })}
-                                className="border-[#D7C0A0] focus:border-[#8A9A5B] focus:ring-[#8A9A5B]"
-                                placeholder="https://example.com/photo.jpg"
-                                data-testid="photo-url-input"
-                            />
+                            <Label className="text-[#4A3728]">Photo *</Label>
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="file"
+                                    ref={albumFileInputRef}
+                                    onChange={handleAlbumFileUpload}
+                                    accept="image/*"
+                                    className="hidden"
+                                    data-testid="album-photo-file-input"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => albumFileInputRef.current?.click()}
+                                    disabled={uploadingPhoto}
+                                    className="w-full border-[#D7C0A0] text-[#4A3728] hover:bg-[#8A9A5B]/10"
+                                    data-testid="album-photo-upload-btn"
+                                >
+                                    {uploadingPhoto ? (
+                                        <>Uploading...</>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4 mr-2" />
+                                            Upload Photo
+                                        </>
+                                    )}
+                                </Button>
+                                {photoData.photo_url && (
+                                    <div className="flex items-center gap-2 p-2 bg-[#FAF0E6] rounded-lg">
+                                        <img 
+                                            src={photoData.photo_url} 
+                                            alt="Preview" 
+                                            className="w-12 h-12 rounded object-cover"
+                                        />
+                                        <span className="text-sm text-[#5D4037] truncate flex-1">Photo ready to add</span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setPhotoData({ ...photoData, photo_url: '' })}
+                                            className="h-8 w-8 p-0 text-red-500"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="caption" className="text-[#4A3728]">Caption</Label>
@@ -523,7 +638,7 @@ export default function MemberProfilePage() {
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={submitting}
+                                disabled={submitting || !photoData.photo_url}
                                 className="btn-primary"
                                 data-testid="save-photo-btn"
                             >
