@@ -37,9 +37,6 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Create the main app with increased body size limit
 app = FastAPI()
 
-# Mount static files for uploads
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
 api_router = APIRouter(prefix="/api")
 
 # ==================== MODELS ====================
@@ -591,10 +588,13 @@ async def upload_file(file: UploadFile = File(...), user = Depends(get_current_u
         buffer.write(contents)
     
     # Return the URL path
-    return {"url": f"/uploads/{unique_filename}", "filename": unique_filename, "size": file_size}
+    return {"url": f"/api/uploads/{unique_filename}", "filename": unique_filename, "size": file_size}
 
 # Include router and middleware
 app.include_router(api_router)
+
+# Mount static files for uploads AFTER router (so /api routes take precedence)
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
