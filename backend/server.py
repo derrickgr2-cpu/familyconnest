@@ -270,6 +270,12 @@ async def get_members(user = Depends(get_current_user)):
         ).to_list(1000)
     return [FamilyMember(**m) for m in members]
 
+# Public endpoint to get all members for homepage preview
+@api_router.get("/members/public", response_model=List[FamilyMember])
+async def get_members_public():
+    members = await db.family_members.find({}, {"_id": 0}).to_list(1000)
+    return [FamilyMember(**m) for m in members]
+
 @api_router.get("/members/{member_id}", response_model=FamilyMember)
 async def get_member(member_id: str, user = Depends(get_current_user)):
     # Admin can view any member
