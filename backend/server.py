@@ -539,10 +539,17 @@ async def add_reply(post_id: str, reply_data: ForumReplyCreate, user = Depends(g
 
 @api_router.delete("/forum/posts/{post_id}/replies/{reply_id}")
 async def delete_reply(post_id: str, reply_id: str, user = Depends(get_current_user)):
-    result = await db.forum_posts.update_one(
-        {"id": post_id},
-        {"$pull": {"replies": {"id": reply_id, "author_id": user["id"]}}}
-    )
+    # Admin can delete any reply
+    if user.get("is_admin", False):
+        result = await db.forum_posts.update_one(
+            {"id": post_id},
+            {"$pull": {"replies": {"id": reply_id}}}
+        )
+    else:
+        result = await db.forum_posts.update_one(
+            {"id": post_id},
+            {"$pull": {"replies": {"id": reply_id, "author_id": user["id"]}}}
+        )
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Reply not found or not authorized")
     return {"message": "Reply deleted successfully"}
