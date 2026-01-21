@@ -1,0 +1,154 @@
+{
+  "identity": {
+    "persona": "E1 - The Anti-AI Designer",
+    "mission": "Create a family reunion app that feels like a handcrafted heirloom, not a SaaS product.",
+    "principles": [
+      "Fusion: Genealogy meets Modern Nature Journal.",
+      "Emotion: Every interaction should feel like turning a page in a photo album.",
+      "Texture: Use wood, paper, and leaf textures to break digital flatness.",
+      "Asymmetry: Nature isn't perfect grids; use organic spacing."
+    ]
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Playfair Display, serif",
+      "weight": "700",
+      "usage": "Main titles, section headers. Use tight tracking (-0.02em).",
+      "tailwind_class": "font-serif tracking-tight"
+    },
+    "body": {
+      "font_family": "Nunito, sans-serif",
+      "weight": "400",
+      "usage": "Paragraphs, UI elements, inputs.",
+      "tailwind_class": "font-sans"
+    },
+    "accents": {
+      "font_family": "Caveat, cursive",
+      "usage": "Notes, handwritten-style annotations.",
+      "tailwind_class": "font-handwriting"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "name": "Deep Oak",
+        "hex": "#4A3728",
+        "tailwind": "bg-[#4A3728] text-white"
+      },
+      "secondary": {
+        "name": "Sage Leaf",
+        "hex": "#8A9A5B",
+        "tailwind": "bg-[#8A9A5B] text-white"
+      },
+      "accent": {
+        "name": "Amber Resin",
+        "hex": "#D4A017",
+        "tailwind": "bg-[#D4A017] text-black"
+      },
+      "background": {
+        "name": "Parchment",
+        "hex": "#FAF0E6",
+        "tailwind": "bg-[#FAF0E6]"
+      },
+      "surface": {
+        "name": "Warm Paper",
+        "hex": "#FFF8F0",
+        "tailwind": "bg-[#FFF8F0]"
+      },
+      "text": {
+        "primary": "#2C1B10",
+        "secondary": "#5D4037"
+      }
+    },
+    "theme_strategy": "Light Mode Only (Warm/Sepia). Dark mode should be a deep 'Night Forest' (very dark brown/green), not black."
+  },
+  "visual_enhancers": {
+    "textures": [
+      {
+        "name": "Wood Grain",
+        "usage": "Card backgrounds, sidebars",
+        "css": "background-image: url('https://images.unsplash.com/photo-1554230253-017daba2b631?crop=entropy&cs=srgb&fm=jpg&q=85'); background-size: cover; opacity: 0.9;"
+      },
+      {
+        "name": "Paper Grain",
+        "usage": "Main content background overlay",
+        "css": "background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');"
+      }
+    ],
+    "decorations": [
+      "Use SVG leaf icons as dividers.",
+      "Add 'torn paper' edges to images using CSS masks.",
+      "Soft, warm shadows: shadow-[0_4px_14px_0_rgba(74,55,40,0.15)]"
+    ]
+  },
+  "components": {
+    "buttons": {
+      "primary": "rounded-full bg-[#4A3728] text-[#FAF0E6] hover:bg-[#3E2D20] shadow-lg transition-transform hover:-translate-y-0.5 font-serif tracking-wide px-8 py-3",
+      "secondary": "rounded-full border-2 border-[#4A3728] text-[#4A3728] hover:bg-[#4A3728] hover:text-[#FAF0E6] transition-colors px-6 py-2"
+    },
+    "cards": {
+      "style": "bg-[#FFF8F0] border border-[#E6D0B3] rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden",
+      "decoration": "Add a subtle top border in #8A9A5B (4px solid)."
+    },
+    "inputs": {
+      "style": "bg-white border-[#D7C0A0] focus:border-[#8A9A5B] focus:ring-[#8A9A5B] rounded-lg shadow-inner"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid (Mode A)",
+    "spacing": "Generous. Use p-8 to p-12 for sections. Gap-6 to Gap-8 for grids.",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+  },
+  "images": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1722435692478-c224d3cd472a?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Oak leaves close up",
+      "usage": "Hero section background with overlay"
+    },
+    "family_reunion": {
+      "url": "https://images.unsplash.com/photo-1627203030417-33b1129033d0?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Family gathering outdoors",
+      "usage": "Landing page feature image"
+    },
+    "wood_texture": {
+      "url": "https://images.unsplash.com/photo-1554230253-017daba2b631?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Wood grain texture",
+      "usage": "Sidebar or card accents"
+    },
+    "paper_texture": {
+      "url": "https://images.unsplash.com/photo-1522839206838-1cfecf32cc72?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Vintage paper texture",
+      "usage": "Background texture"
+    }
+  },
+  "instructions_to_main_agent": [
+    "DO NOT use default blue links. Use #4A3728 or #8A9A5B.",
+    "DO NOT use pure black (#000000). Use #2C1B10 (Dark Coffee).",
+    "Ensure all Shadcn components are customized to match the 'Warm Paper' theme.",
+    "Use 'Playfair Display' for all headings. Import it from Google Fonts.",
+    "Use 'Nunito' for body text. Import it from Google Fonts.",
+    "For the Family Tree visualization, use a clean, node-based layout with curved connectors (bezier curves).",
+    "Implement a 'Memory Wall' feature using a masonry layout for photos.",
+    "The Event Calendar should look like a physical planner/journal."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use sonner for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx"
+  ]
+}
