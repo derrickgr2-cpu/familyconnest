@@ -396,18 +396,25 @@ async def create_event(event_data: EventCreate, user = Depends(get_current_user)
 
 @api_router.get("/events", response_model=List[Event])
 async def get_events(user = Depends(get_current_user)):
-    events = await db.events.find(
-        {"created_by": user["id"]},
-        {"_id": 0}
-    ).to_list(1000)
+    # Admin sees all events, regular users see only their own
+    if user.get("is_admin", False):
+        events = await db.events.find({}, {"_id": 0}).to_list(1000)
+    else:
+        events = await db.events.find(
+            {"created_by": user["id"]},
+            {"_id": 0}
+        ).to_list(1000)
     return [Event(**e) for e in events]
 
 @api_router.get("/events/{event_id}", response_model=Event)
 async def get_event(event_id: str, user = Depends(get_current_user)):
-    event = await db.events.find_one(
-        {"id": event_id, "created_by": user["id"]},
-        {"_id": 0}
-    )
+    if user.get("is_admin", False):
+        event = await db.events.find_one({"id": event_id}, {"_id": 0})
+    else:
+        event = await db.events.find_one(
+            {"id": event_id, "created_by": user["id"]},
+            {"_id": 0}
+        )
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return Event(**event)
@@ -418,8 +425,14 @@ async def update_event(event_id: str, update_data: EventUpdate, user = Depends(g
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # Admin can update any event
+    if user.get("is_admin", False):
+        query = {"id": event_id}
+    else:
+        query = {"id": event_id, "created_by": user["id"]}
+    
     result = await db.events.find_one_and_update(
-        {"id": event_id, "created_by": user["id"]},
+        query,
         {"$set": update_dict},
         return_document=True,
         projection={"_id": 0}
@@ -430,7 +443,11 @@ async def update_event(event_id: str, update_data: EventUpdate, user = Depends(g
 
 @api_router.delete("/events/{event_id}")
 async def delete_event(event_id: str, user = Depends(get_current_user)):
-    result = await db.events.delete_one({"id": event_id, "created_by": user["id"]})
+    # Admin can delete any event
+    if user.get("is_admin", False):
+        result = await db.events.delete_one({"id": event_id})
+    else:
+        result = await db.events.delete_one({"id": event_id, "created_by": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Event not found")
     return {"message": "Event deleted successfully"}
