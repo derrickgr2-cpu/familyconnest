@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { membersApi } from '../lib/api';
+import { membersApi, uploadApi } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -27,7 +27,9 @@ import {
     User,
     Edit,
     Trash2,
-    X
+    X,
+    Upload,
+    ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,6 +54,8 @@ export default function MembersPage() {
         parent_id: ''
     });
     const [submitting, setSubmitting] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         fetchMembers();
@@ -97,6 +101,23 @@ export default function MembersPage() {
             parent_id: member.parent_id || ''
         });
         setIsModalOpen(true);
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const response = await uploadApi.upload(file);
+            const backendUrl = process.env.REACT_APP_BACKEND_URL;
+            setFormData({ ...formData, photo_url: `${backendUrl}${response.data.url}` });
+            toast.success('Photo uploaded!');
+        } catch (error) {
+            toast.error('Failed to upload photo');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -359,15 +380,53 @@ export default function MembersPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="photo_url" className="text-[#4A3728]">Photo URL</Label>
-                            <Input
-                                id="photo_url"
-                                value={formData.photo_url}
-                                onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                                className="border-[#D7C0A0] focus:border-[#8A9A5B] focus:ring-[#8A9A5B]"
-                                placeholder="https://example.com/photo.jpg"
-                                data-testid="member-photo-input"
-                            />
+                            <Label htmlFor="photo_url" className="text-[#4A3728]">Photo</Label>
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    accept="image/*"
+                                    className="hidden"
+                                    data-testid="member-photo-file-input"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    className="w-full border-[#D7C0A0] text-[#4A3728] hover:bg-[#8A9A5B]/10"
+                                    data-testid="member-photo-upload-btn"
+                                >
+                                    {uploading ? (
+                                        <>Uploading...</>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4 mr-2" />
+                                            Upload Photo
+                                        </>
+                                    )}
+                                </Button>
+                                {formData.photo_url && (
+                                    <div className="flex items-center gap-2 p-2 bg-[#FAF0E6] rounded-lg">
+                                        <img 
+                                            src={formData.photo_url} 
+                                            alt="Preview" 
+                                            className="w-10 h-10 rounded object-cover"
+                                        />
+                                        <span className="text-sm text-[#5D4037] truncate flex-1">Photo uploaded</span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setFormData({ ...formData, photo_url: '' })}
+                                            className="h-8 w-8 p-0 text-red-500"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-2">
