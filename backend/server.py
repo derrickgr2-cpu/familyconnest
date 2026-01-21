@@ -276,6 +276,14 @@ async def get_members_public():
     members = await db.family_members.find({}, {"_id": 0}).to_list(1000)
     return [FamilyMember(**m) for m in members]
 
+# Public endpoint to get a single member's details and photos
+@api_router.get("/members/public/{member_id}")
+async def get_member_public(member_id: str):
+    member = await db.family_members.find_one({"id": member_id}, {"_id": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    return member
+
 @api_router.get("/members/{member_id}", response_model=FamilyMember)
 async def get_member(member_id: str, user = Depends(get_current_user)):
     # Admin can view any member
