@@ -312,7 +312,8 @@ async def create_event(event_data: EventCreate, user = Depends(get_current_user)
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.events.insert_one(event_doc)
-    del event_doc["_id"] if "_id" in event_doc else None
+    if "_id" in event_doc:
+        del event_doc["_id"]
     return Event(**event_doc)
 
 @api_router.get("/events", response_model=List[Event])
