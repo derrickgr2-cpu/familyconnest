@@ -260,18 +260,26 @@ async def create_member(member_data: FamilyMemberCreate, user = Depends(get_curr
 
 @api_router.get("/members", response_model=List[FamilyMember])
 async def get_members(user = Depends(get_current_user)):
-    members = await db.family_members.find(
-        {"created_by": user["id"]}, 
-        {"_id": 0}
-    ).to_list(1000)
+    # Admin can see all members, regular users see only their own
+    if user.get("is_admin", False):
+        members = await db.family_members.find({}, {"_id": 0}).to_list(1000)
+    else:
+        members = await db.family_members.find(
+            {"created_by": user["id"]}, 
+            {"_id": 0}
+        ).to_list(1000)
     return [FamilyMember(**m) for m in members]
 
 @api_router.get("/members/{member_id}", response_model=FamilyMember)
 async def get_member(member_id: str, user = Depends(get_current_user)):
-    member = await db.family_members.find_one(
-        {"id": member_id, "created_by": user["id"]},
-        {"_id": 0}
-    )
+    # Admin can view any member
+    if user.get("is_admin", False):
+        member = await db.family_members.find_one({"id": member_id}, {"_id": 0})
+    else:
+        member = await db.family_members.find_one(
+            {"id": member_id, "created_by": user["id"]},
+            {"_id": 0}
+        )
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     return FamilyMember(**member)
@@ -282,8 +290,14 @@ async def update_member(member_id: str, update_data: FamilyMemberUpdate, user = 
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # Admin can update any member
+    if user.get("is_admin", False):
+        query = {"id": member_id}
+    else:
+        query = {"id": member_id, "created_by": user["id"]}
+    
     result = await db.family_members.find_one_and_update(
-        {"id": member_id, "created_by": user["id"]},
+        query,
         {"$set": update_dict},
         return_document=True,
         projection={"_id": 0}
@@ -294,7 +308,11 @@ async def update_member(member_id: str, update_data: FamilyMemberUpdate, user = 
 
 @api_router.delete("/members/{member_id}")
 async def delete_member(member_id: str, user = Depends(get_current_user)):
-    result = await db.family_members.delete_one({"id": member_id, "created_by": user["id"]})
+    # Admin can delete any member
+    if user.get("is_admin", False):
+        result = await db.family_members.delete_one({"id": member_id})
+    else:
+        result = await db.family_members.delete_one({"id": member_id, "created_by": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Member not found")
     return {"message": "Member deleted successfully"}
