@@ -51,12 +51,23 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserPhotoAdd(BaseModel):
+    photo_url: str
+    caption: Optional[str] = None
+
+class UserPhoto(BaseModel):
+    id: str
+    photo_url: str
+    caption: Optional[str] = None
+    added_at: str
+
 class UserResponse(BaseModel):
     id: str
     email: str
     name: str
     is_admin: bool = False
     photo_url: Optional[str] = None
+    photos: List[dict] = []
 
 class TokenResponse(BaseModel):
     access_token: str
