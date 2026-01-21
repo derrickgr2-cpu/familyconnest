@@ -89,7 +89,7 @@ class FamilyMember(BaseModel):
     bio: Optional[str] = None
     photo_url: Optional[str] = None
     parent_id: Optional[str] = None
-    photos: List[str] = []
+    photos: List[dict] = []
     created_by: str
     created_at: str
 
