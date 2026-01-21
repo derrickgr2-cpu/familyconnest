@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { uploadApi } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { TreePine, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { TreePine, Mail, Lock, User, ArrowLeft, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -13,9 +14,29 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [photoUrl, setPhotoUrl] = useState('');
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const { register } = useAuth();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const response = await uploadApi.upload(file);
+            const backendUrl = process.env.REACT_APP_BACKEND_URL;
+            setPhotoUrl(`${backendUrl}${response.data.url}`);
+            toast.success('Photo uploaded!');
+        } catch (error) {
+            toast.error('Failed to upload photo');
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +58,7 @@ export default function RegisterPage() {
 
         setLoading(true);
         try {
-            await register(email, password, name);
+            await register(email, password, name, photoUrl);
             toast.success('Welcome to The Barbour Connection!');
             navigate('/dashboard');
         } catch (error) {
