@@ -42,6 +42,7 @@ export const authApi = {
 // Members API
 export const membersApi = {
     getAll: () => api.get('/members'),
+    getAllPublic: () => api.get('/members/public'),
     getOne: (id) => api.get(`/members/${id}`),
     create: (data) => api.post('/members', data),
     update: (id, data) => api.put(`/members/${id}`, data),
