@@ -221,6 +221,7 @@ async def register(user_data: UserCreate):
         "password": hashed_pw,
         "is_admin": is_admin,
         "photo_url": user_data.photo_url,
+        "photos": [],
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -228,7 +229,7 @@ async def register(user_data: UserCreate):
     token = create_token(user_id, user_data.email)
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name, is_admin=is_admin, photo_url=user_data.photo_url)
+        user=UserResponse(id=user_id, email=user_data.email, name=user_data.name, is_admin=is_admin, photo_url=user_data.photo_url, photos=[])
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
@@ -240,12 +241,58 @@ async def login(credentials: UserLogin):
     token = create_token(user["id"], user["email"])
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"))
+        user=UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"), photos=user.get("photos", []))
     )
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(user = Depends(get_current_user)):
-    return UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"))
+    return UserResponse(id=user["id"], email=user["email"], name=user["name"], is_admin=user.get("is_admin", False), photo_url=user.get("photo_url"), photos=user.get("photos", []))
+
+# ==================== USER PHOTO ALBUM ROUTES ====================
+
+@api_router.post("/auth/photos", response_model=UserPhoto)
+async def add_user_photo(photo_data: UserPhotoAdd, user = Depends(get_current_user)):
+    photo_id = str(uuid.uuid4())
+    photo_doc = {
+        "id": photo_id,
+        "photo_url": photo_data.photo_url,
+        "caption": photo_data.caption,
+        "added_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$push": {"photos": photo_doc}}
+    )
+    return UserPhoto(**photo_doc)
+
+@api_router.get("/auth/photos", response_model=List[UserPhoto])
+async def get_user_photos(user = Depends(get_current_user)):
+    current_user = await db.users.find_one({"id": user["id"]}, {"_id": 0, "photos": 1})
+    return [UserPhoto(**p) for p in current_user.get("photos", [])]
+
+@api_router.delete("/auth/photos/{photo_id}")
+async def delete_user_photo(photo_id: str, user = Depends(get_current_user)):
+    result = await db.users.update_one(
+        {"id": user["id"]},
+        {"$pull": {"photos": {"id": photo_id}}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return {"message": "Photo deleted successfully"}
+
+# Public endpoint to get a user's photos by user ID
+@api_router.get("/users/{user_id}/public")
+async def get_user_public(user_id: str):
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": user["id"],
+        "name": user["name"],
+        "photo_url": user.get("photo_url"),
+        "photos": user.get("photos", [])
+    }
 
 # ==================== FAMILY MEMBERS ROUTES ====================
 
