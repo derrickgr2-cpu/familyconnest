@@ -127,6 +127,36 @@ class Event(BaseModel):
     created_by: str
     created_at: str
 
+# ==================== FORUM MODELS ====================
+
+class ForumPostCreate(BaseModel):
+    title: str
+    content: str
+
+class ForumPostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+class ForumReplyCreate(BaseModel):
+    content: str
+
+class ForumReply(BaseModel):
+    id: str
+    content: str
+    author_id: str
+    author_name: str
+    created_at: str
+
+class ForumPost(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    title: str
+    content: str
+    author_id: str
+    author_name: str
+    replies: List[ForumReply] = []
+    created_at: str
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -366,6 +396,91 @@ async def delete_event(event_id: str, user = Depends(get_current_user)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Event not found")
     return {"message": "Event deleted successfully"}
+
+# ==================== FORUM ROUTES ====================
+
+@api_router.post("/forum/posts", response_model=ForumPost)
+async def create_forum_post(post_data: ForumPostCreate, user = Depends(get_current_user)):
+    post_id = str(uuid.uuid4())
+    post_doc = {
+        "id": post_id,
+        "title": post_data.title,
+        "content": post_data.content,
+        "author_id": user["id"],
+        "author_name": user["name"],
+        "replies": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.forum_posts.insert_one(post_doc)
+    if "_id" in post_doc:
+        del post_doc["_id"]
+    return ForumPost(**post_doc)
+
+@api_router.get("/forum/posts", response_model=List[ForumPost])
+async def get_forum_posts(user = Depends(get_current_user)):
+    posts = await db.forum_posts.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return [ForumPost(**p) for p in posts]
+
+@api_router.get("/forum/posts/{post_id}", response_model=ForumPost)
+async def get_forum_post(post_id: str, user = Depends(get_current_user)):
+    post = await db.forum_posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return ForumPost(**post)
+
+@api_router.put("/forum/posts/{post_id}", response_model=ForumPost)
+async def update_forum_post(post_id: str, update_data: ForumPostUpdate, user = Depends(get_current_user)):
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    result = await db.forum_posts.find_one_and_update(
+        {"id": post_id, "author_id": user["id"]},
+        {"$set": update_dict},
+        return_document=True,
+        projection={"_id": 0}
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Post not found or not authorized")
+    return ForumPost(**result)
+
+@api_router.delete("/forum/posts/{post_id}")
+async def delete_forum_post(post_id: str, user = Depends(get_current_user)):
+    result = await db.forum_posts.delete_one({"id": post_id, "author_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found or not authorized")
+    return {"message": "Post deleted successfully"}
+
+@api_router.post("/forum/posts/{post_id}/replies", response_model=ForumReply)
+async def add_reply(post_id: str, reply_data: ForumReplyCreate, user = Depends(get_current_user)):
+    post = await db.forum_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    reply_id = str(uuid.uuid4())
+    reply_doc = {
+        "id": reply_id,
+        "content": reply_data.content,
+        "author_id": user["id"],
+        "author_name": user["name"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.forum_posts.update_one(
+        {"id": post_id},
+        {"$push": {"replies": reply_doc}}
+    )
+    return ForumReply(**reply_doc)
+
+@api_router.delete("/forum/posts/{post_id}/replies/{reply_id}")
+async def delete_reply(post_id: str, reply_id: str, user = Depends(get_current_user)):
+    result = await db.forum_posts.update_one(
+        {"id": post_id},
+        {"$pull": {"replies": {"id": reply_id, "author_id": user["id"]}}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Reply not found or not authorized")
+    return {"message": "Reply deleted successfully"}
 
 # ==================== HEALTH CHECK ====================
 
