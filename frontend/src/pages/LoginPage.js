@@ -61,7 +61,7 @@ export default function LoginPage() {
                         </p>
                     </div>
                     <p className="text-sm text-[#FAF0E6]/60">
-                        © 2024 Family Roots
+                        © 2024 The Barbour Connection
                     </p>
                 </div>
             </div>

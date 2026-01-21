@@ -38,7 +38,7 @@ export default function RegisterPage() {
         setLoading(true);
         try {
             await register(email, password, name);
-            toast.success('Welcome to Family Roots!');
+            toast.success('Welcome to The Barbour Connection!');
             navigate('/dashboard');
         } catch (error) {
             const message = error.response?.data?.detail || 'Registration failed';
@@ -74,7 +74,7 @@ export default function RegisterPage() {
                         </p>
                     </div>
                     <p className="text-sm text-[#FAF0E6]/60">
-                        © 2024 Family Roots
+                        © 2024 The Barbour Connection
                     </p>
                 </div>
             </div>

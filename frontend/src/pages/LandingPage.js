@@ -13,7 +13,7 @@ export default function LandingPage() {
                     <div className="flex items-center gap-2">
                         <TreePine className="h-8 w-8 text-[#D4A017]" />
                         <span className="font-serif text-xl font-bold text-[#FAF0E6]">
-                            Family Roots
+                            The Barbour Connection
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
@@ -41,7 +41,7 @@ export default function LandingPage() {
                 <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 text-center">
                     <div className="animate-fade-in-up max-w-4xl">
                         <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-[#FAF0E6] tracking-tight mb-6">
-                            Nurture Your <span className="text-[#D4A017]">Family Tree</span>
+                            The Barbour <span className="text-[#D4A017]">Connection</span>
                         </h1>
                         <p className="text-lg text-[#FAF0E6]/80 max-w-2xl mx-auto mb-8">
                             Bring generations together. Create lasting memories, plan reunions, 
@@ -182,11 +182,12 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <TreePine className="h-6 w-6 text-[#D4A017]" />
-                        <span className="font-serif font-semibold text-[#FAF0E6]">Family Roots</span>
+                        <span className="font-serif font-semibold text-[#FAF0E6]">The Barbour Connection</span>
                     </div>
-                    <p className="text-sm">
-                        © 2024 Family Roots. Nurturing connections across generations.
-                    </p>
+                    <div className="text-sm text-center md:text-right">
+                        <p>Site Admin: Samantha Smith</p>
+                        <p>Developed by Derrick Mitchell</p>
+                    </div>
                 </div>
             </footer>
         </div>

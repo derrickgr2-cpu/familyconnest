@@ -47,7 +47,7 @@ export default function Layout({ children }) {
                         <Link to="/dashboard" className="flex items-center gap-2">
                             <TreePine className="h-8 w-8 text-[#8A9A5B]" />
                             <span className="font-serif text-xl font-bold text-[#4A3728]">
-                                Family Roots
+                                The Barbour Connection
                             </span>
                         </Link>
 
