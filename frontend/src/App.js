@@ -12,6 +12,7 @@ import MembersPage from "./pages/MembersPage";
 import MemberProfilePage from "./pages/MemberProfilePage";
 import CalendarPage from "./pages/CalendarPage";
 import ForumPage from "./pages/ForumPage";
+import PublicAlbumPage from "./pages/PublicAlbumPage";
 import Layout from "./components/Layout";
 
 // Protected Route Component
@@ -61,6 +62,7 @@ function AppRoutes() {
         <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+            <Route path="/album/:id" element={<PublicAlbumPage />} />
             <Route path="/login" element={
                 <PublicRoute>
                     <LoginPage />
