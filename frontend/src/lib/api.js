@@ -63,6 +63,14 @@ export const uploadApi = {
         return api.post('/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
+    },
+    // Public upload for registration (no auth required)
+    uploadPublic: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/upload/public', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
     }
 };
 
