@@ -186,6 +186,56 @@ export default function RegisterPage() {
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[#4A3728]">Profile Photo (Optional)</Label>
+                                    <div className="flex flex-col gap-2">
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileUpload}
+                                            accept="image/*"
+                                            className="hidden"
+                                            data-testid="register-photo-file-input"
+                                        />
+                                        {!photoUrl ? (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploading}
+                                                className="w-full border-[#D7C0A0] text-[#4A3728] hover:bg-[#8A9A5B]/10"
+                                                data-testid="register-photo-upload-btn"
+                                            >
+                                                {uploading ? (
+                                                    <>Uploading...</>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="h-4 w-4 mr-2" />
+                                                        Upload Profile Photo
+                                                    </>
+                                                )}
+                                            </Button>
+                                        ) : (
+                                            <div className="flex items-center gap-3 p-3 bg-[#FAF0E6] rounded-lg border border-[#D7C0A0]">
+                                                <img 
+                                                    src={photoUrl} 
+                                                    alt="Profile preview" 
+                                                    className="w-12 h-12 rounded-full object-cover border-2 border-[#D4A017]"
+                                                />
+                                                <span className="text-sm text-[#5D4037] flex-1">Photo uploaded</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setPhotoUrl('')}
+                                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                                 <Button
                                     type="submit"
                                     disabled={loading}
