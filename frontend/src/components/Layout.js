@@ -29,7 +29,7 @@ const navItems = [
 ];
 
 export default function Layout({ children }) {
-    const { user, logout } = useAuth();
+    const { user, logout, isAdmin } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -88,7 +88,12 @@ export default function Layout({ children }) {
                                         <div className="w-8 h-8 rounded-full bg-[#8A9A5B] flex items-center justify-center text-white font-semibold">
                                             {user?.name?.charAt(0).toUpperCase() || 'U'}
                                         </div>
-                                        <span className="hidden sm:inline font-medium">{user?.name}</span>
+                                        <div className="hidden sm:flex flex-col items-start">
+                                            <span className="font-medium">{user?.name}</span>
+                                            {isAdmin && (
+                                                <span className="text-xs text-[#D4A017] font-semibold">Administrator</span>
+                                            )}
+                                        </div>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48 bg-[#FFF8F0] border-[#E6D0B3]">
