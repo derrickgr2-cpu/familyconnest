@@ -75,4 +75,15 @@ export const eventsApi = {
     delete: (id) => api.delete(`/events/${id}`),
 };
 
+// Forum API
+export const forumApi = {
+    getPosts: () => api.get('/forum/posts'),
+    getPost: (id) => api.get(`/forum/posts/${id}`),
+    createPost: (data) => api.post('/forum/posts', data),
+    updatePost: (id, data) => api.put(`/forum/posts/${id}`, data),
+    deletePost: (id) => api.delete(`/forum/posts/${id}`),
+    addReply: (postId, data) => api.post(`/forum/posts/${postId}/replies`, data),
+    deleteReply: (postId, replyId) => api.delete(`/forum/posts/${postId}/replies/${replyId}`),
+};
+
 export default api;
