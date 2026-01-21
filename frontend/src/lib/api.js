@@ -55,6 +55,17 @@ export const photosApi = {
     delete: (memberId, photoId) => api.delete(`/members/${memberId}/photos/${photoId}`),
 };
 
+// Upload API
+export const uploadApi = {
+    upload: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    }
+};
+
 // Events API
 export const eventsApi = {
     getAll: () => api.get('/events'),
