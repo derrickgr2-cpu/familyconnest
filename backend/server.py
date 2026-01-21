@@ -489,8 +489,14 @@ async def update_forum_post(post_id: str, update_data: ForumPostUpdate, user = D
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # Admin can update any post
+    if user.get("is_admin", False):
+        query = {"id": post_id}
+    else:
+        query = {"id": post_id, "author_id": user["id"]}
+    
     result = await db.forum_posts.find_one_and_update(
-        {"id": post_id, "author_id": user["id"]},
+        query,
         {"$set": update_dict},
         return_document=True,
         projection={"_id": 0}
@@ -501,7 +507,11 @@ async def update_forum_post(post_id: str, update_data: ForumPostUpdate, user = D
 
 @api_router.delete("/forum/posts/{post_id}")
 async def delete_forum_post(post_id: str, user = Depends(get_current_user)):
-    result = await db.forum_posts.delete_one({"id": post_id, "author_id": user["id"]})
+    # Admin can delete any post
+    if user.get("is_admin", False):
+        result = await db.forum_posts.delete_one({"id": post_id})
+    else:
+        result = await db.forum_posts.delete_one({"id": post_id, "author_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Post not found or not authorized")
     return {"message": "Post deleted successfully"}
