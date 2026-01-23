@@ -28,8 +28,7 @@ export default function RegisterPage() {
         setUploading(true);
         try {
             const response = await uploadApi.uploadPublic(file);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL;
-            setPhotoUrl(`${backendUrl}${response.data.url}`);
+            setPhotoUrl(response.data.url);
             toast.success('Photo uploaded!');
         } catch (error) {
             toast.error('Failed to upload photo');
