@@ -111,8 +111,7 @@ export default function MemberProfilePage() {
         setUploading(true);
         try {
             const response = await uploadApi.upload(file);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL;
-            setFormData({ ...formData, photo_url: `${backendUrl}${response.data.url}` });
+            setFormData({ ...formData, photo_url: response.data.url });
             toast.success('Photo uploaded!');
         } catch (error) {
             toast.error('Failed to upload photo');
@@ -128,8 +127,7 @@ export default function MemberProfilePage() {
         setUploadingPhoto(true);
         try {
             const response = await uploadApi.upload(file);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL;
-            setPhotoData({ ...photoData, photo_url: `${backendUrl}${response.data.url}` });
+            setPhotoData({ ...photoData, photo_url: response.data.url });
             toast.success('Photo uploaded!');
         } catch (error) {
             toast.error('Failed to upload photo');
