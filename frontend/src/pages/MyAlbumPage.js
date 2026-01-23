@@ -56,8 +56,7 @@ export default function MyAlbumPage() {
         setUploading(true);
         try {
             const response = await uploadApi.upload(file);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL;
-            setPhotoData({ ...photoData, photo_url: `${backendUrl}${response.data.url}` });
+            setPhotoData({ ...photoData, photo_url: response.data.url });
             toast.success('Photo uploaded!');
         } catch (error) {
             toast.error('Failed to upload photo');
