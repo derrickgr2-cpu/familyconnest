@@ -653,17 +653,13 @@ async def upload_file(file: UploadFile = File(...), user = Depends(get_current_u
     if file_size > max_size:
         raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
     
-    # Generate unique filename
-    file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    unique_filename = f"{uuid.uuid4()}.{file_ext}"
-    file_path = UPLOAD_DIR / unique_filename
+    # Convert to base64 data URL for database storage
+    import base64
+    base64_data = base64.b64encode(contents).decode('utf-8')
+    data_url = f"data:{file.content_type};base64,{base64_data}"
     
-    # Save file
-    with open(file_path, "wb") as buffer:
-        buffer.write(contents)
-    
-    # Return the URL path
-    return {"url": f"/api/uploads/{unique_filename}", "filename": unique_filename, "size": file_size}
+    # Return the data URL
+    return {"url": data_url, "filename": file.filename, "size": file_size}
 
 # Public upload endpoint for registration (no auth required)
 @api_router.post("/upload/public")
@@ -681,17 +677,13 @@ async def upload_file_public(file: UploadFile = File(...)):
     if file_size > max_size:
         raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB.")
     
-    # Generate unique filename
-    file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    unique_filename = f"{uuid.uuid4()}.{file_ext}"
-    file_path = UPLOAD_DIR / unique_filename
+    # Convert to base64 data URL for database storage
+    import base64
+    base64_data = base64.b64encode(contents).decode('utf-8')
+    data_url = f"data:{file.content_type};base64,{base64_data}"
     
-    # Save file
-    with open(file_path, "wb") as buffer:
-        buffer.write(contents)
-    
-    # Return the URL path
-    return {"url": f"/api/uploads/{unique_filename}", "filename": unique_filename, "size": file_size}
+    # Return the data URL
+    return {"url": data_url, "filename": file.filename, "size": file_size}
 
 # Include router and middleware
 app.include_router(api_router)
