@@ -112,8 +112,8 @@ export default function MembersPage() {
         setUploading(true);
         try {
             const response = await uploadApi.upload(file);
-            const backendUrl = process.env.REACT_APP_BACKEND_URL;
-            setFormData({ ...formData, photo_url: `${backendUrl}${response.data.url}` });
+            // Data URL is returned directly, no need to prepend backend URL
+            setFormData({ ...formData, photo_url: response.data.url });
             toast.success('Photo uploaded!');
         } catch (error) {
             toast.error('Failed to upload photo');
