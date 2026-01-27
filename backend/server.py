@@ -51,6 +51,14 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetVerify(BaseModel):
+    email: EmailStr
+    name: str
+    new_password: str
+
 class UserPhotoAdd(BaseModel):
     photo_url: str
     caption: Optional[str] = None
